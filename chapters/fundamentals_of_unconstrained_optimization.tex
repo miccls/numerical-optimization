@@ -226,9 +226,10 @@ This means the Hessian is:
     0&k_2^2\pd[2][g][x_2^2]
 \end{pmatrix} 
 \]
-The condition number of a matrix, $\kappa(A)$, is the quotient between its largest and smallest singular values (which for a square matrix is the absolute value of its eigenvalues):
+The condition number of a matrix, $\kappa(A)$, is the quotient between its largest and smallest singular values (which for a square matrix is the absolute value of its eigenvalues).
+Denoting the set of eigenvalues of a matrix by $\Lambda$, one can write
 \[
-\kappa(A) = \frac{{\operatorname{max}}_i|\lambda_i|}{\operatorname{min}_i|\lambda_i|}
+\kappa(A) = \underset{\lambda_1, \lambda_2 \in \Lambda}{\operatorname{sup}}\left|\frac{\lambda_1}{\lambda_2}\right|
 \]
 In our case, that becomes:
 \[
