@@ -1,50 +1,44 @@
 {
-    "name": "LaTeX Project",
-    // Tells VS Code to build the environment from our Dockerfile
-    "build": {
-      "dockerfile": "Dockerfile"
-    },
-    // VS Code customizations for this container
-    "customizations": {
-      "vscode": {
-        // Essential extensions to install inside the container
-        "extensions": [
-          "James-Yu.latex-workshop"
+  "name": "LaTeX",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "remoteUser": "bookclubber",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "James-Yu.latex-workshop"
+      ],
+      "settings": {
+        // Use latexmk to build the PDF
+        "latex-workshop.latex.tools": [
+          {
+            "name": "latexmk",
+            "command": "latexmk",
+            "args": [
+              "-synctex=1",
+              "-interaction=nonstopmode",
+              "-file-line-error",
+              "-pdf",
+              "-outdir=latex-build",
+              "%DOC%"
+            ]
+          }
         ],
-        // Settings to apply specifically inside the container
-        "settings": {
-          // Use latexmk to build the PDF
-          "latex-workshop.latex.tools": [
-            {
-              "name": "latexmk",
-              "command": "latexmk",
-              "args": [
-                "-synctex=1",
-                "-interaction=nonstopmode",
-                "-file-line-error",
-                "-pdf",
-                "-outdir=latex-build", 
-                "%DOC%"
-              ]
-            }
-          ],
-          // Set the build recipe
-          "latex-workshop.latex.recipes": [
-            {
-              "name": "latexmk",
-              "tools": [
-                "latexmk"
-              ]
-            }
-          ],
-          // Automatically build the project on save
-          "latex-workshop.latex.autoBuild.onSave.enabled": true,
-          // Show the PDF in a VS Code tab instead of an external viewer
-          "latex-workshop.view.pdf.viewer": "tab"
-        }
+        // Set the build recipe
+        "latex-workshop.latex.recipes": [
+          {
+            "name": "latexmk",
+            "tools": [
+              "latexmk"
+            ]
+          }
+        ],
+        // Automatically build the project on save
+        "latex-workshop.latex.autoBuild.onSave.enabled": true,
+        // Show the PDF in a VS Code tab instead of an external viewer
+        "latex-workshop.view.pdf.viewer": "tab"
       }
-    },
-    // Mount your project folder into the container's /workspace directory
-    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-    "workspaceFolder": "/workspace"
+    }
   }
+}
