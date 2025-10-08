@@ -1,1 +1,28 @@
 \section{Theory of Constrained Optimization}
+The formulation of constrained problems in this book,
+\[
+    \underset{x\in \mathbb{R}^n}{\min} f(x) \qquad \text{subject to} \quad 
+    \begin{cases}
+        c_i(x) &= 0, \quad i\in\mathcal{E},\\
+        c_i(x) &\geq 0, \quad i\in\mathcal{I}
+    \end{cases}
+\]
+is standard in the literature, except for the sign chosen of the inequality constraint functions ($i\in\mathcal{I}$) which may vary from author to author. 
+By defining the feasible set as
+\[
+    \Omega \equiv \left\{ x \in \mathbb{R}^n | c_i(x) = 0, \forall i\in\mathcal{E}, c_i(x) \geq 0, \forall i \in \mathcal{I} \right\}
+\]
+the authors present a very elegant formulation of the constrained problem as
+\[
+    \underset{x\in\Omega}{\min}f(x).
+\]
+% As a fun exercise, show that the tangent cone is a vector space over R.
+% Also, it should be possible to show it is a smooth manifold. Does it need several charts?
+% x1^2 + x2^2 < 2 needs two charts. Probably just need to define a transition function, then done!
+% -------------------------------------
+% #####################################
+% ------------ Cone Stuff -------------
+% #####################################
+% -------------------------------------
+\subsection{Solutions}
+The exercises chosen for this chapter are 12.1, 12.2, 12.4, 12.4, 12.11 (not \textbf{b)}) and 12.22. 
