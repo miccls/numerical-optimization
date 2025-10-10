@@ -1,17 +1,19 @@
 \section{Theory of Constrained Optimization}
 The formulation of constrained problems in this book,
-\[
+\begin{equation}
     \underset{x\in \mathbb{R}^n}{\min} f(x) \qquad \text{subject to} \quad 
     \begin{cases}
         c_i(x) &= 0, \quad i\in\mathcal{E},\\
         c_i(x) &\geq 0, \quad i\in\mathcal{I}
     \end{cases}
-\]
+    \label{eq:constrained-problem}
+\end{equation}
 is standard in the literature, except for the sign chosen of the inequality constraint functions ($i\in\mathcal{I}$) which may vary from author to author. 
 By defining the feasible set as
-\[
+\begin{equation}
     \Omega \equiv \left\{ x \in \mathbb{R}^n | c_i(x) = 0, \forall i\in\mathcal{E}, c_i(x) \geq 0, \forall i \in \mathcal{I} \right\}
-\]
+    \label{eq:feasible-set}
+\end{equation}
 the authors present a very elegant formulation of the constrained problem as
 \[
     \underset{x\in\Omega}{\min}f(x).
@@ -26,3 +28,36 @@ the authors present a very elegant formulation of the constrained problem as
 % -------------------------------------
 \subsection{Solutions}
 The exercises chosen for this chapter are 12.1, 12.2, 12.4, 12.4, 12.11 (not \textbf{b)}) and 12.22. 
+\subsubsection{Exercise 12.22}
+We begin by making explicit the implications of the properties of $c_i(x), \i\in\mathcal{E}$ being linear and $-c_i(x), i\in\mathcal{I}$ being convex. 
+The defining property of a linear function is the following
+\[
+    f(ax + by) = af(x) + bf(y)
+\]
+and for a function to be convex means
+\[
+    f(\lambda x + (1-\lambda)y) \leq \lambda f(x) + (1 - \lambda) f(y),\qquad \lambda \in [0,1].
+\]
+In words, the function between two points $x,y$ is bounded above by the straight line connecting $f(x), f(y)$.
+Additionally, the negative of a convex function is \textit{concave}, which has the same definition, but with $\leq$ switched for $\geq$.
+
+Now for a set to be convex, we require any convex combination of points within the set to also be members of the set\footnote{A convex combination is a linear combination with non-negative coefficents summing to one. If you allow the coefficents to take any value, but still require them to sum to one, it is called an \textit{affine} combination.}.
+That is,
+\[
+    \lambda x + (1 - \lambda)y = z \overset{!}{\in} \Omega
+\]
+To show this holds, we need to show $z$ is feasible.
+\begin{align*}
+    c_i(z) &= 0,\quad i\in\mathcal{E}\\
+    c_j(z) &\geq 0, \quad i\in\mathcal{I}    
+\end{align*}
+Starting with the equality constraints
+\begin{align*}
+    0 \overset{!}{=} c_i(z) = c_i(\lambda x + (1-\lambda)y) = \lambda c_i(x) + (1-\lambda)c_i(y) = 0
+\end{align*}
+where the second inequality follows from linearity of $c_i, i\in\mathcal{E}$ and the third from $x,y\in\Omega$.
+For the inequality constraints we have
+\[
+    0 \overset{!}{\leq} c_i(z) = c_i(\lambda x + (1-\lambda)y) \geq \lambda c_i(x) + (1-\lambda)c_i(y) \geq 0
+\]
+where the second inequality comes from $c_i, i \in \mathcal{I}$ being concave. \hfill\sq
