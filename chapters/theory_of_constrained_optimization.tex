@@ -18,14 +18,46 @@ the authors present a very elegant formulation of the constrained problem as
 \[
     \underset{x\in\Omega}{\min}f(x).
 \]
-% As a fun exercise, show that the tangent cone is a vector space over R.
-% Also, it should be possible to show it is a smooth manifold. Does it need several charts?
-% x1^2 + x2^2 < 2 needs two charts. Probably just need to define a transition function, then done!
-% -------------------------------------
-% #####################################
-% ------------ Cone Stuff -------------
-% #####################################
-% -------------------------------------
+\subsection{Farkas' lemma}
+In the proof of the first order optimality conditions (Theorem 12.1 in the book) the authors use
+\begin{Lma}[Farkas]
+    Let the cone K be defined as 
+    \[
+        K = \{By + Cw|y\geq 0\}.
+    \]
+    Given any vector $g\in\mathbb{R}^n$ we have either that $g\in K$ (i.e. $g = By + Cw$ for some $y\geq 0, w \in \mathbb{R}^n$) or that there exists $d\in\mathbb{R}^n$ satisfying 
+    \begin{equation}
+        g^T d < 0, \quad B^Td \geq 0, \quad C^T d = 0
+        \label{eq:farkas_conditions}
+\end{equation}
+\end{Lma}
+I felt the rest of the proof, after Farkas' lemma was a bit thin so I thought I would expand a bit here.
+The proof assumes the constraint qualification LICQ, that the the active constraints $c_i(x^*)$ at the optimum are linearly independent, i.e. the matrix $[\nabla c_i(x^*)]$ of their gradients has full rank.
+Then what needs to be done is to show that there exists a vector $\lambda^*$ of Lagrange multipliers which satisfies the KKT conditions.
+They have previously showed that for all vectors $d$ in the tangent cone at the optimum $T_\Omega(x^*)$, the following holds
+\[
+    d^T\nabla f(x^*) \geq 0.
+\]
+They also show that if the LICQ hold, $T_\Omega(x^*) = \mathcal{F}(x^*)$. Recalling the definition of $\mathcal{F}(x^*)$, the set of first order feasible directions,
+\[
+    \mathcal{F}(x^*) = \left\{ d \> \left\vert \begin{aligned}
+        \quad&d^T  A_\mathcal{I}(x^*) \geq 0\\
+        \quad&d^T  A_\mathcal{E}(x^*) = 0
+    \end{aligned}\right.\right\}
+\]
+here $A_\square(x^*)$ is the matrix of either active inequality constraint gradients or equality constraint gradients depending what you replace with \sq.
+By identifying $A_\mathcal{I}(x^*)$ with $B$ and $A_\mathcal{E}(x^*)$ with $C$ in Farkas' lemma, we see that there must be some vector $\lambda_i^* \geq 0, i \in \mathcal{A}(x^*) \cap \mathcal{I}$ for which 
+\[
+    \nabla f(x^*) = A(x^*) \lambda^* = \begin{pmatrix}
+        A_\mathcal{I}(x^*)\\
+        0
+    \end{pmatrix}\lambda^*_\mathcal{I} +  \begin{pmatrix}
+        0\\
+        A_\mathcal{E}(x^*)
+    \end{pmatrix}\lambda^*_\mathcal{E}
+\]
+since all vectors $d$ that satisfy the latter two of the conditions in \eqref{eq:farkas_conditions} do not satisfy $d^T\nabla f(x^*) < 0$.
+The proof is then finished by verifying that this $\lambda^*$, together with the local solution $x^*$ does in fact satisfy all the KKT conditions.
 \subsection{Solutions}
 The exercises chosen for this chapter are 12.1, 12.2, 12.4, 12.4, 12.11 (not \textbf{b)}) and 12.22. 
 \subsubsection{Exercise 12.22}
