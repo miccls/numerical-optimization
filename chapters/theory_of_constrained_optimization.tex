@@ -60,6 +60,63 @@ since all vectors $d$ that satisfy the latter two of the conditions in \eqref{eq
 The proof is then finished by verifying that this $\lambda^*$, together with the local solution $x^*$ does in fact satisfy all the KKT conditions.
 \subsection{Solutions}
 The exercises chosen for this chapter are 12.1, 12.2, 12.4, 12.4, 12.11 (not \textbf{b)}) and 12.22. 
+
+\subsection{Exercise 12.11}
+\subsubsection*{\textbf{a)}}
+Since $x_2 \leq x_1^2$, this means that as $x_2 \to 0$
+\[
+    x_2 = O(x_1^2)
+\]
+That is, $x_2$ goes to zero at least as fast as $x_1^2$.
+So, if we parameterize the paths approaching the origin by $z(t_k) = (t_k, x_2(t_k))$ with $t_k \to 0$ as $k\to\infty$, we can express the tangent direction $d$ as
+\[
+    d = \lim_{k\to\infty} \frac{z(t_k) - \mathbf{0}}{t_k} = \lim_{k\to\infty} \begin{pmatrix}
+        t_k / t_k\\
+        x_2(t_k) / t_k 
+    \end{pmatrix}
+\]
+The limit $\lim_{k\to\infty}x_2(t_k)/t_k = 0$ since $x_2 = O(x_1^2) = O(t_k^2)$. 
+Thus, we get \[
+    d = (1, 0)
+\]
+and $T_\Omega(x^*) = \operatorname{span}\{d\}$.
+How about the set of first-order feasible directions, $\mathcal{F}$?
+The gradients of the constraint functions,  $c_1(x) = x_2$, $c_2(x) = x_1^2 - x_2$, are
+\begin{align*}
+    \nabla c_1(x^*) &= (0, 1)\\
+    \nabla c_2(x^*) &= (0, -1).
+\end{align*}
+The set of first-order feasible solutions is the set of directions $d$ (we only have inequality constriants in this case) for which the following conditions holds 
+\[
+    d^T \nabla c_i(x) \geq 0, \quad \forall i \in \mathcal{A}(x) \cap \mathcal{I}
+\]
+In order for $d^T\nabla c_i(x^*) \geq 0$ for both $i=0$ and $i=1$ we must have $d = (a, 0)^T$.
+Thus, $\mathcal{F}(x^*) = T_\Omega(x^*)$.  
+\subsubsection*{\textbf{b)}}
+ *\textit{skip until next session}* LICQ are not satisfied since the gradients of the constraint functions are not linearly independent at $x^* = (0,0)^T$
+\begin{align*}
+    \nabla c_1(x^*) &= (0, 1)\\
+    \nabla c_2(x^*) &= (0, -1)
+\end{align*}
+with $c_1(x) = x_2$, $c_2(x) = x_1^2 - x_2$.
+\subsubsection*{\textbf{c)}}
+If the objective function is $f(x) = -x_2$ the Lagrangian is
+\begin{align*}
+    \mathcal{L}(x, \lambda) = -x_2 - \sum_{i\in\{1,2\}} \lambda_i c_i(x) =& -x_2 -\lambda_1 x_2 - \lambda_2(x_1^2 - x_2)\\
+    =& -\lambda_2x_1^2 + (\lambda_2 - \lambda_1 - 1)x_2
+\end{align*}
+So, (12.34a) becomes:
+\[
+    \nabla_x\mathcal{L}(x^*, \lambda^*) = \begin{pmatrix}
+        0\\
+        \lambda_2 - \lambda_1 - 1
+    \end{pmatrix} \overset{!}{=} 0
+\]
+Choosing Lagrange multiplies such that $\lambda_2 - \lambda_1 = 1$ satisfies the above condition. 
+Since the LICQ does not hold, $\lambda^*$ is not unique.
+For (12.34b) and (12.34c) we already know $x^*$ is feasible.  
+To satisfy (12.34d) we can pick $\lambda_1 = 1$, $\lambda_2 = 2$, for example.
+Lastly, (12.34e) is satisfied since both constraint functions are zero at $x^*$.
 \subsubsection{Exercise 12.22}
 We begin by making explicit the implications of the properties of $c_i(x), \i\in\mathcal{E}$ being linear and $-c_i(x), i\in\mathcal{I}$ being convex. 
 The defining property of a linear function is the following
