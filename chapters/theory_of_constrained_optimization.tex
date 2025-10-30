@@ -63,23 +63,46 @@ The exercises chosen for this chapter are 12.1, 12.2, 12.4, 12.4, 12.11 (not \te
 
 \subsection{Exercise 12.11}
 \subsubsection*{\textbf{a)}}
-Since $x_2 \leq x_1^2$, this means that as $x_2 \to 0$
+The feasible set is $\Omega = \{ x \in \mathbb{R}^2 \mid x_2 \ge 0, x_2 \le x_1^2 \}$.
+Let's define the constraint functions as $c_1(x) = x_2 \ge 0$ and $c_2(x) = x_1^2 - x_2 \ge 0$.
+The tangent cone $T_\Omega(x^*)$ is the set of all directions $d$ for which there exists a sequence of feasible points $\{z_k\} \subset \Omega$, $z_k \to x^*$ and a sequence of positive scalars $\{t_k\}$, $t_k \to 0^+$ as $k\to\infty$ such that:
 \[
-    x_2 = O(x_1^2)
+d = \lim_{k \to \infty} \frac{z_k - x^*}{t_k}
 \]
-That is, $x_2$ goes to zero at least as fast as $x_1^2$.
-So, if we parameterize the paths approaching the origin by $z(t_k) = (t_k, x_2(t_k))$ with $t_k \to 0$ as $k\to\infty$, we can express the tangent direction $d$ as
+
+Now, let $d = (d_1, d_2)$ be a vector in $T_\Omega(x^*)$, and let $z_k = (x_{1k}, x_{2k})$. We can then write the above as:
 \[
-    d = \lim_{k\to\infty} \frac{z(t_k) - \mathbf{0}}{t_k} = \lim_{k\to\infty} \begin{pmatrix}
-        t_k / t_k\\
-        x_2(t_k) / t_k 
-    \end{pmatrix}
+    (d_1, d_2) = \lim_{k \to \infty} \left( \frac{x_{1k}}{t_k}, \frac{x_{2k}}{t_k} \right)
 \]
-The limit $\lim_{k\to\infty}x_2(t_k)/t_k = 0$ since $x_2 = O(x_1^2) = O(t_k^2)$. 
-Thus, we get \[
-    d = (1, 0)
+Since each $z_k \in \Omega$, it must satisfy the constraints, $c_i \ge 0$.
+Dividing $c_1$ by $t_k > 0$, we get the following condition:
+\[
+    \frac{x_{2k}}{t_k} \ge 0 \overset{k\to\infty}{\implies} d_2 \ge 0
 \]
-and $T_\Omega(x^*) = \operatorname{span}\{d\}$.
+Dividing $c_2$ by $t_k$ as well, we get
+\[
+    \frac{x_{2k}}{t_k} \le \frac{x_{1k}^2}{t_k}.
+\]
+where can rewrite the right-hand side as:
+\[
+    \frac{x_{2k}}{t_k} \le \left( \frac{x_{1k}}{t_k} \right) \cdot x_{1k}.
+\]
+Now, take the limit as $k \to \infty$. We know $\lim \frac{x_{2k}}{t_k} = d_2$, $\lim \frac{x_{1k}}{t_k} = d_1$, and $\lim x_{1k} = 0$ (since $z_k \to x^*$).
+\[
+    d_2 \le \left( \lim_{k \to \infty} \frac{x_{1k}}{t_k} \right) \cdot \left( \lim_{k \to \infty} x_{1k} \right)
+\]
+\[
+    d_2 \le d_1 \cdot 0
+\]
+\[
+    d_2 \le 0
+\]
+Combining $d_2 \ge 0$ and $d_2 \le 0$, we must have $d_2 = 0$. There is no restriction on $d_1$.
+Thus, finally, the tangent cone is
+\[
+    T_{\Omega}(x^*) = \left\{(d_1, 0) | d_1 \in \mathbb{R} \right\}.
+\]
+
 How about the set of first-order feasible directions, $\mathcal{F}$?
 The gradients of the constraint functions,  $c_1(x) = x_2$, $c_2(x) = x_1^2 - x_2$, are
 \begin{align*}
@@ -121,11 +144,11 @@ Lastly, (12.34e) is satisfied since both constraint functions are zero at $x^*$.
 \subsubsection*{\textbf{d)}}
 \[
     z_k = \begin{pmatrix}
-        0\\
-        \frac{1}{|k| + 1}
+        t_k\\
+        t_k^2
     \end{pmatrix}
 \]
-
+with $t_k = 1 / k$
 \subsubsection{Exercise 12.22}
 We begin by making explicit the implications of the properties of $c_i(x), \i\in\mathcal{E}$ being linear and $-c_i(x), i\in\mathcal{I}$ being convex. 
 The defining property of a linear function is the following
