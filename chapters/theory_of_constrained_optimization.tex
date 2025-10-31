@@ -74,8 +74,9 @@ Now, let $d = (d_1, d_2)$ be a vector in $T_\Omega(x^*)$, and let $z_k = (x_{1k}
 \[
     (d_1, d_2) = \lim_{k \to \infty} \left( \frac{x_{1k}}{t_k}, \frac{x_{2k}}{t_k} \right)
 \]
-Since each $z_k \in \Omega$, it must satisfy the constraints, $c_i \ge 0$.
-Dividing $c_1$ by $t_k > 0$, we get the following condition:
+Since each $z_k \in \Omega$, it must satisfy the constraints. 
+We use the constraints to furnish restrictions on the possible values of $d_1$ and $d_2$.
+Starting out with $c_1$, we divide it by $t_k > 0$ to get the following condition:
 \[
     \frac{x_{2k}}{t_k} \ge 0 \overset{k\to\infty}{\implies} d_2 \ge 0
 \]
@@ -102,7 +103,8 @@ Thus, finally, the tangent cone is
 \[
     T_{\Omega}(x^*) = \left\{(d_1, 0) | d_1 \in \mathbb{R} \right\}.
 \]
-
+In the above, we have assumed that the tangent cone is not empty, in part \textbf{d)}, we show that is the case.
+ 
 How about the set of first-order feasible directions, $\mathcal{F}$?
 The gradients of the constraint functions,  $c_1(x) = x_2$, $c_2(x) = x_1^2 - x_2$, are
 \begin{align*}
