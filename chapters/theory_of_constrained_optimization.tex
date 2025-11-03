@@ -32,8 +32,8 @@ In the proof of the first order optimality conditions (Theorem 12.1 in the book)
 \end{equation}
 \end{Lma}
 I felt the rest of the proof, after Farkas' lemma was a bit thin so I thought I would expand a bit here.
-The proof assumes the constraint qualification LICQ, that the the active constraints $c_i(x^*)$ at the optimum are linearly independent, i.e. the matrix $[\nabla c_i(x^*)]$ of their gradients has full rank.
-Then what needs to be done is to show that there exists a vector $\lambda^*$ of Lagrange multipliers which satisfies the KKT conditions.
+The proof assumes the constraint qualification LICQ, that the gradients of the active constraints $\nabla c_i(x^*), \> i\in \mathcal{A}(x^*)$ at the optimum are linearly independent. 
+Then they show that there exists a vector $\lambda^*$ of Lagrange multipliers which satisfies the KKT conditions.
 They have previously showed that for all vectors $d$ in the tangent cone at the optimum $T_\Omega(x^*)$, the following holds
 \[
     d^T\nabla f(x^*) \geq 0.
@@ -41,25 +41,29 @@ They have previously showed that for all vectors $d$ in the tangent cone at the 
 They also show that if the LICQ hold, $T_\Omega(x^*) = \mathcal{F}(x^*)$. Recalling the definition of $\mathcal{F}(x^*)$, the set of first order feasible directions,
 \[
     \mathcal{F}(x^*) = \left\{ d \> \left\vert \begin{aligned}
-        \quad&d^T  A_\mathcal{I}(x^*) \geq 0\\
-        \quad&d^T  A_\mathcal{E}(x^*) = 0
+        \quad&d^T \nabla c_i(x^*) \geq 0,\quad \forall i \in A_\mathcal{I}(x^*)\cap\mathcal{I}\\
+        \quad&d^T \nabla c_i(x^*) = 0, \quad \forall i\in\mathcal{E}
     \end{aligned}\right.\right\}
 \]
-here $A_\square(x^*)$ is the matrix of either active inequality constraint gradients or equality constraint gradients depending what you replace with \sq.
-By identifying $A_\mathcal{I}(x^*)$ with $B$ and $A_\mathcal{E}(x^*)$ with $C$ in Farkas' lemma, we see that there must be some vector $\lambda_i^* \geq 0, i \in \mathcal{A}(x^*) \cap \mathcal{I}$ for which 
+By identifying $B$ with the inequality constraint gradients and $C$ with the equality constraint gradients in Farkas' lemma, we see that there must be some vector $\lambda_i^* \geq 0, i \in \mathcal{A}(x^*) \cap \mathcal{I}$ for which 
 \[
-    \nabla f(x^*) = A(x^*) \lambda^* = \begin{pmatrix}
-        A_\mathcal{I}(x^*)\\
-        0
-    \end{pmatrix}\lambda^*_\mathcal{I} +  \begin{pmatrix}
-        0\\
-        A_\mathcal{E}(x^*)
-    \end{pmatrix}\lambda^*_\mathcal{E}
+    \nabla f(x^*) = \nabla c_i(x)\lambda^*
 \]
 since all vectors $d$ that satisfy the latter two of the conditions in \eqref{eq:farkas_conditions} do not satisfy $d^T\nabla f(x^*) < 0$.
 The proof is then finished by verifying that this $\lambda^*$, together with the local solution $x^*$ does in fact satisfy all the KKT conditions.
 \subsection{Solutions}
 The exercises chosen for this chapter are 12.1, 12.2, 12.4, 12.4, 12.11 (not \textbf{b)}) and 12.22. 
+
+\subsection{Exercise 12.4}
+Just as in the proof of Theorem 2.5\footnote{Found on page 16 of the book.} we prove by contradiction.
+Assume $x$ is a local but not global solution. Then there must exist some $z$ for which $f(z) < f(x)$. 
+From the convexity of the feasible region, we can produce any convex combination of $x$ and $z$ and rest assured of it's feasibility. 
+So, if we consider the line between $x$ and $z$, which must be contained in $\Omega$ by convexity, we have from the convexity of $f$
+\[
+    f(\lambda z + (1 - \lambda)x) \leq \lambda f(z) + (1 - \lambda) f(x) < f(x)
+\]
+Thus, in an arbitrarily tiny neighborhood (radius $\lambda$) around $x$, there must exist points with a lower function value.
+This contradicts the assumption that $x$ is a local solution and it must thus hold that any solution which is a local solution must also be a global.\hfill\sq 
 
 \subsection{Exercise 12.11}
 \subsubsection*{\textbf{a)}}
@@ -104,7 +108,7 @@ Thus, finally, the tangent cone is
     T_{\Omega}(x^*) = \left\{(d_1, 0) | d_1 \in \mathbb{R} \right\}.
 \]
 In the above, we have assumed that the tangent cone is not empty, in part \textbf{d)}, we show that is the case.
- 
+
 How about the set of first-order feasible directions, $\mathcal{F}$?
 The gradients of the constraint functions,  $c_1(x) = x_2$, $c_2(x) = x_1^2 - x_2$, are
 \begin{align*}
@@ -152,7 +156,7 @@ Lastly, (12.34e) is satisfied since both constraint functions are zero at $x^*$.
 \]
 with $t_k = 1 / k$
 \subsubsection{Exercise 12.22}
-We begin by making explicit the implications of the properties of $c_i(x), \i\in\mathcal{E}$ being linear and $-c_i(x), i\in\mathcal{I}$ being convex. 
+We begin by making explicit the implications of the properties of $c_i(x), i\in\mathcal{E}$ being linear and $-c_i(x), i\in\mathcal{I}$ being convex. 
 The defining property of a linear function is the following
 \[
     f(ax + by) = af(x) + bf(y)
