@@ -1,4 +1,4 @@
-\section{Fundamentals of Unonstrained Optimization}
+\section{Fundamentals of Unconstrained Optimization}
 The concept of a local minimizer is introduced,
 \begin{Def}[Weak local minimizer]
     A point $x^*$ is a \textit{weak local minimizer} if there is a neighborhood
@@ -16,7 +16,7 @@ On the other hand a \textit{strict} local optimizer is where the inequality abov
 A local minimizer $x^*$ is called \textit{isolated} if there exists a neighborhood in which $x^*$ is the only local minimizer.
 Sufficient conditions for a point to be a local minimizer were presented as the following 
 \begin{Thm}[Second-Order Sufficient Conditions]
-    Suppose that $\nabla^2f$ is continous in an open neighborhood of $x^*$ and that $\nabla f(x^*) = 0$ and $\nabla^2f(x^*)$ is positive definite. Then $x^*$ is a strict local minimizer of $f$
+    Suppose that $\nabla^2f$ is continuous in an open neighborhood of $x^*$ and that $\nabla f(x^*) = 0$ and $\nabla^2f(x^*)$ is positive definite. Then $x^*$ is a strict local minimizer of $f$
 \end{Thm}
 \subsection{Questions}
 \begin{enumerate}[label = \roman*)]
@@ -124,7 +124,7 @@ Substituting this for $\pd[][x_k][z_i]$ in the first equation we get
 \pd[][\tilde{f}][z_i] = \sum_k \pd[][f][x_k] S_{ki} = S_i^T \cdot \nabla f
 \]
 with $S_i$ being the $i^{\text{th}}$ column of $S$.
-This means\footnote{If $S_i$ had b]n rows, we would have had $\nabla \tilde{f}(z) = S\nabla f(x)$}
+This means\footnote{If $S_i$ had been rows, we would have had $\nabla \tilde{f}(z) = S\nabla f(x)$}
 \[
 \nabla \tilde{f}(z) = \begin{bmatrix}
     S_1 \nabla f\\
@@ -143,7 +143,7 @@ The expression above can be rewritten as:
 \]
 So when assembling the whole Hessian matrix from the partial derivatives, we obtain
 \[
-\nabla \tilde{f}(z) = S^T \nabla f(x) S
+\nabla^2 \tilde{f}(z) = S^T \nabla^2 f(x) S
 \]
 \hfill\sq 
 \subsubsection{Exercise 2.11}
@@ -164,7 +164,7 @@ and
 \[
 \tilde{p}_k = -\tilde{B}_k^{-1}\nabla \tilde{f}(z_k)
 \]
-Given that the initial Hessians approximations are chosen s.t $\tilde{B}_0 = S^TB_0S$ we can s] that
+Given that the initial Hessians approximations are chosen such that $\tilde{B}_0 = S^TB_0S$ we can see that
 \[
 \tilde{p}_0 =  -(S^TB_0S)^{-1}S^T\nabla f(x_0) = -S^{-1}B_0^{-1}\nabla f(x_0)
 \]
