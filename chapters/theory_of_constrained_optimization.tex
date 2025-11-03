@@ -54,7 +54,7 @@ The proof is then finished by verifying that this $\lambda^*$, together with the
 \subsection{Solutions}
 The exercises chosen for this chapter are 12.1, 12.2, 12.4, 12.4, 12.11 (not \textbf{b)}) and 12.22. 
 
-\subsection{Exercise 12.4}
+\subsubsection{Exercise 12.4}
 Just as in the proof of Theorem 2.5\footnote{Found on page 16 of the book.} we prove by contradiction.
 Assume $x$ is a local but not global solution. Then there must exist some $z$ for which $f(z) < f(x)$. 
 From the convexity of the feasible region, we can produce any convex combination of $x$ and $z$ and rest assured of it's feasibility. 
@@ -65,15 +65,14 @@ So, if we consider the line between $x$ and $z$, which must be contained in $\Om
 Thus, in an arbitrarily tiny neighborhood (radius $\lambda$) around $x$, there must exist points with a lower function value.
 This contradicts the assumption that $x$ is a local solution and it must thus hold that any solution which is a local solution must also be a global.\hfill\sq 
 
-\subsection{Exercise 12.11}
-\subsubsection*{\textbf{a)}}
-The feasible set is $\Omega = \{ x \in \mathbb{R}^2 \mid x_2 \ge 0, x_2 \le x_1^2 \}$.
+\subsubsection{Exercise 12.11}
+\begin{enumerate}
+\item[\textbf{a)}] The feasible set is $\Omega = \{ x \in \mathbb{R}^2 \mid x_2 \ge 0, x_2 \le x_1^2 \}$.
 Let's define the constraint functions as $c_1(x) = x_2 \ge 0$ and $c_2(x) = x_1^2 - x_2 \ge 0$.
 The tangent cone $T_\Omega(x^*)$ is the set of all directions $d$ for which there exists a sequence of feasible points $\{z_k\} \subset \Omega$, $z_k \to x^*$ and a sequence of positive scalars $\{t_k\}$, $t_k \to 0^+$ as $k\to\infty$ such that:
 \[
 d = \lim_{k \to \infty} \frac{z_k - x^*}{t_k}
 \]
-
 Now, let $d = (d_1, d_2)$ be a vector in $T_\Omega(x^*)$, and let $z_k = (x_{1k}, x_{2k})$. We can then write the above as:
 \[
     (d_1, d_2) = \lim_{k \to \infty} \left( \frac{x_{1k}}{t_k}, \frac{x_{2k}}{t_k} \right)
@@ -121,14 +120,14 @@ The set of first-order feasible solutions is the set of directions $d$ (we only 
 \]
 In order for $d^T\nabla c_i(x^*) \geq 0$ for both $i=0$ and $i=1$ we must have $d = (a, 0)^T$.
 Thus, $\mathcal{F}(x^*) = T_\Omega(x^*)$.  
-\subsubsection*{\textbf{b)}}
+\item[\textbf{b)}]
  *\textit{skip until next session}* LICQ are not satisfied since the gradients of the constraint functions are not linearly independent at $x^* = (0,0)^T$
 \begin{align*}
     \nabla c_1(x^*) &= (0, 1)\\
     \nabla c_2(x^*) &= (0, -1)
 \end{align*}
 with $c_1(x) = x_2$, $c_2(x) = x_1^2 - x_2$.
-\subsubsection*{\textbf{c)}}
+\item[\textbf{c)}]
 If the objective function is $f(x) = -x_2$ the Lagrangian is
 \begin{align*}
     \mathcal{L}(x, \lambda) = -x_2 - \sum_{i\in\{1,2\}} \lambda_i c_i(x) =& -x_2 -\lambda_1 x_2 - \lambda_2(x_1^2 - x_2)\\
@@ -147,7 +146,7 @@ For (12.34b) and (12.34c) we already know $x^*$ is feasible.
 To satisfy (12.34d) we can pick $\lambda_1 = 1$, $\lambda_2 = 2$, for example.
 Lastly, (12.34e) is satisfied since both constraint functions are zero at $x^*$.
 
-\subsubsection*{\textbf{d)}}
+\item[\textbf{d)}]
 \[
     z_k = \begin{pmatrix}
         t_k\\
@@ -155,6 +154,7 @@ Lastly, (12.34e) is satisfied since both constraint functions are zero at $x^*$.
     \end{pmatrix}
 \]
 with $t_k = 1 / k$
+\end{enumerate}
 \subsubsection{Exercise 12.22}
 We begin by making explicit the implications of the properties of $c_i(x), i\in\mathcal{E}$ being linear and $-c_i(x), i\in\mathcal{I}$ being convex. 
 The defining property of a linear function is the following
