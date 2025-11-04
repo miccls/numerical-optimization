@@ -54,6 +54,38 @@ The proof is then finished by verifying that this $\lambda^*$, together with the
 \subsection{Solutions}
 The exercises chosen for this chapter are 12.1, 12.2, 12.4, 12.11 (not \textbf{b)}) and 12.22. 
 
+\subsubsection{Exercise 12.1}
+\begin{enumerate}
+\item[(a)]
+The feasible set is 
+\[
+    \Omega = \{x \in \mathbb{R} \mid c(x)=0\}
+\]
+The zeros of $c(x)$ are at $x = 0$ and at solutions of the equation $\sin\frac{1}{x} = 0$, which are $x_k = \frac{1}{k\pi}, \> k\in\mathbb{Z} \setminus \{0\}$.
+To show $c(x) \in C^2$, we compute the first and second derivatives. For $x \neq 0$:
+\begin{align*}
+    c'(x) &= 6x^5 \sin(1/x) - x^4 \cos(1/x)\\
+    c''(x) &= (30x^4-x^2)\sin(1/x) - 10x^3 \cos(1/x)
+\end{align*}
+As $x\to 0$, both $c'$ and $c''$ do since $\sin, \cos$ only take finite values.
+Thus, both first and second derivatives have well defined values in the entire domain, $c \in C^2$.
+
+\item[(b)]
+Let $x_k = 1/(k\pi)$ for $k \in \mathbb{Z}, k \neq 0$. The distance to the next feasible point $x_{k+1}$ is
+\[
+|x_k - x_{k+1}| = \left|\frac{1}{k\pi} - \frac{1}{(k+1)\pi}\right| = \frac{1}{\pi|k(k+1)|}
+\]
+Choose a neighborhood $\mathcal{N}_k$ of $x_k$ with radius $r = \frac{1}{2\pi|k(k+1)|}$. This neighborhood contains no other feasible points. Since $x_k$ is the only feasible point in $\mathcal{N}_k$, it is a local solution. As it is the only local solution in $\mathcal{N}_k$, it is an isolated local solution.
+
+\item[(c)]
+The objective function is $f(x) = x^2$. We have $f(0)=0$ and $f(x_k) = 1/(k\pi)^2 > 0$ for all $k \neq 0$. 
+Since $f(0) < f(x_k)$ for all other feasible points $x_k$, $x=0$ is the global solution. 
+It is also a strict local solution because for any neighborhood of $0$, there are feasible points $x_k$ for large enough $|k|$, and for these points $f(x_k) > f(0)$.
+However, this also means that however small we choose our neighborhood around $0$, there will always be a $k$ large enough for other local solutions to exist within the neighborhood. 
+Therefore, $x=0$ is not an isolated local solution.
+\end{enumerate}
+
+
 \subsubsection{Exercise 12.4}
 Just as in the proof of Theorem 2.5\footnote{Found on page 16 of the book.} we prove by contradiction.
 Assume $x$ is a local but not global solution. Then there must exist some $z$ for which $f(z) < f(x)$. 
@@ -67,7 +99,7 @@ This contradicts the assumption that $x$ is a local solution and it must thus ho
 
 \subsubsection{Exercise 12.11}
 \begin{enumerate}
-\item[\textbf{a)}] The feasible set is $\Omega = \{ x \in \mathbb{R}^2 \mid x_2 \ge 0, x_2 \le x_1^2 \}$.
+\item[(a)] The feasible set is $\Omega = \{ x \in \mathbb{R}^2 \mid x_2 \ge 0, x_2 \le x_1^2 \}$.
 Let's define the constraint functions as $c_1(x) = x_2 \ge 0$ and $c_2(x) = x_1^2 - x_2 \ge 0$.
 The tangent cone $T_\Omega(x^*)$ is the set of all directions $d$ for which there exists a sequence of feasible points $\{z_k\} \subset \Omega$, $z_k \to x^*$ and a sequence of positive scalars $\{t_k\}$, $t_k \to 0^+$ as $k\to\infty$ such that:
 \[
@@ -120,14 +152,14 @@ The set of first-order feasible solutions is the set of directions $d$ (we only 
 \]
 In order for $d^T\nabla c_i(x^*) \geq 0$ for both $i=0$ and $i=1$ we must have $d = (a, 0)^T$.
 Thus, $\mathcal{F}(x^*) = T_\Omega(x^*)$.  
-\item[\textbf{b)}]
+\item[(b)]
  *\textit{skip until next session}* LICQ are not satisfied since the gradients of the constraint functions are not linearly independent at $x^* = (0,0)^T$
 \begin{align*}
     \nabla c_1(x^*) &= (0, 1)\\
     \nabla c_2(x^*) &= (0, -1)
 \end{align*}
 with $c_1(x) = x_2$, $c_2(x) = x_1^2 - x_2$.
-\item[\textbf{c)}]
+\item[(c)]
 If the objective function is $f(x) = -x_2$ the Lagrangian is
 \begin{align*}
     \mathcal{L}(x, \lambda) = -x_2 - \sum_{i\in\{1,2\}} \lambda_i c_i(x) =& -x_2 -\lambda_1 x_2 - \lambda_2(x_1^2 - x_2)\\
@@ -146,7 +178,7 @@ For (12.34b) and (12.34c) we already know $x^*$ is feasible.
 To satisfy (12.34d) we can pick $\lambda_1 = 1$, $\lambda_2 = 2$, for example.
 Lastly, (12.34e) is satisfied since both constraint functions are zero at $x^*$.
 
-\item[\textbf{d)}]
+\item[(d)]
 \[
     z_k = \begin{pmatrix}
         t_k\\
