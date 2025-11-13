@@ -31,7 +31,7 @@ In the proof of the first order optimality conditions (Theorem 12.1 in the book)
         \label{eq:farkas_conditions}
 \end{equation}
 \end{Lma}
-I felt the rest of the proof, after Farkas' lemma was a bit thin so I thought I would expand a bit here.
+I felt the rest of the proof, after Farkas' lemma, was a bit thin so I thought I would expand a bit here.
 The proof assumes the constraint qualification LICQ, that the gradients of the active constraints $\nabla c_i(x^*), \> i\in \mathcal{A}(x^*)$ at the optimum are linearly independent. 
 Then they show that there exists a vector $\lambda^*$ of Lagrange multipliers which satisfies the KKT conditions.
 They have previously showed that for all vectors $d$ in the tangent cone at the optimum $T_\Omega(x^*)$, the following holds
@@ -51,6 +51,68 @@ By identifying $B$ with the inequality constraint gradients and $C$ with the equ
 \]
 since all vectors $d$ that satisfy the latter two of the conditions in \eqref{eq:farkas_conditions} do not satisfy $d^T\nabla f(x^*) < 0$.
 The proof is then finished by verifying that this $\lambda^*$, together with the local solution $x^*$ does in fact satisfy all the KKT conditions.
+\subsection{Another proof of the sufficient conditions}
+I found the proof of the sufficient conditions to be somewhat confusing, so I decided to include a similar proof found in the book ''Foundations of Optimization'' by Osman Güler.
+We begin by stating the 
+\begin{Thm}[Second-order sufficient conditions]
+Let $x^*$ be a feasible point for the problem \eqref{eq:constrained-problem} that satisfies the KKT conditions with Lagrange multiplier $\lambda^*$.
+If 
+\be
+    d^T\nabla_x^2\mathcal{L}(x^*, \lambda^*) d > 0
+    \label{eq:positive-definite-hessian-of-lagrangian}
+\ee
+for all $d\neq 0$ for which the following conditions hold\footnote{
+    This set is also known as the critical cone at $x^*$, denoted $\mathcal{C}(x^*, \lambda^*)$.
+    The critical cone is the set of directions $d\in\mathcal{F}(x^*)$ for which it is unknown if the objective will increase or decrease from first-order information only.
+}
+\begin{align*}% TODO Reverse this list.
+    \nabla c_i(x^*)^T d =& 0, \quad \forall i\in\mathcal{E},\\
+    \nabla c_i(x^*)^T d =& 0, \quad \forall i\in\mathcal{I}\cap\mathcal{A}(x^*) \text{ with } \lambda^*_i > 0\\
+    \nabla c_i(x^*)^T d \geq& 0, \quad \forall i\in\mathcal{I}\cap\mathcal{A}(x^*),
+\end{align*}
+then $x^*$ is a strict local minimizer of \eqref{eq:constrained-problem} and there exists a constant $c$ and an open ball $B(x^*, \epsilon)$ such that
+\be
+    f(x) \geq f(x^*) + c\|x - x^*\|^2, \quad \forall x\in B(x^*, \epsilon) \cap \Omega
+    \label{eq:sufficient-condition-statement}
+\ee
+\end{Thm}
+\textit{Proof}. Suppose, for contradiction, there are some directions for which \eqref{eq:positive-definite-hessian-of-lagrangian} is satisfied, but not \eqref{eq:sufficient-condition-statement}.
+Let $\epsilon_k$ be some positive sequence of numbers tending to 0 as $k$ goes to infinity, then there exists a sequence of feasible points $x_k \to x^*$, such that
+\[ 
+    f(x_k) < f(x^*) + \epsilon_k\|x^* - x_k\|^2.
+\]
+Define $d_k = x_k - x^*$ and let $d_k / \|d_k\| \to d$ with $\|d\| = 1$.
+Then, on one hand we have
+\begin{align*}
+    f(x_k) &<\> f(x^*) + \epsilon_k \|d_k\|^2 + 0\\
+    \epsilon_k\|d\|^2 &>\> f(x_k) - f(x^*) - \sum_{i\mathcal{A}(x^*)} \lambda^*_i c_i(x_k)\\
+    &= \mathcal{L}(x_k, \lambda^*) - \mathcal{L}(x^*, \lambda^*)\\
+    &= \nabla_x\mathcal{L}(x^*,\lambda^*)^T d_k + \frac{1}{2}d_k^T\nabla_x^2\mathcal{L}(x^*, \lambda^*)d_k + o(\|d_k\|^2)\\
+    &= \frac{1}{2}d_k^T\nabla_x^2\mathcal{L}(x^*, \lambda^*)d_k + o(\|d_k\|^2)
+\end{align*}
+where first equality follows from $\sum \lambda_i^*c_i(x^*) = 0$ and the third from $\nabla_x\mathcal{L}(x^*,\lambda^*) = 0$, both of which are implied from the satisfaction of the KKT conditions.
+Now, dividing both sides by $\|d_k\|^2 / 2$ and sending $k\to\infty$ gives the following 
+\[
+    d^T \nabla_x^2\mathcal{L}(x^*, \lambda^*) d \leq 0
+\]
+which violates \eqref{eq:positive-definite-hessian-of-lagrangian}.
+On the other hand we have
+\begin{align*}
+    \epsilon_k \|d_k\|^2 &> f(x_k) - f(x^*) = \nabla f(x^*)^Td_k + o(\|d_k\|),\\
+                       0 &\leq c_i(x_k) - c_i(x^*) = \nabla c_i(x^*)^T d_k + o(\|d_k\|), \quad i\in \mathcal{A}(x^*)\cap\mathcal{I}\\
+                       0 &= c_i(x_k) - c_i(x^*) = \nabla c_i(x^*)^T d_k + o(\|d_k\|), \quad i \in \mathcal{E}
+\end{align*}
+Dividing each equation above by $\|d_k\|$ and sending $k\to\infty$ yields,
+\[
+    \nabla f(x^*)^Td \leq 0, \quad c_\mathcal{I}(x^*)^T d \geq 0, \quad c_\mathcal{E}(x^*)^T d = 0
+\]
+which along with $x^*$ satisfying the KKT conditions implies $d\in \mathcal{C}(x^*, \lambda^*)$.
+We thus produced a vector $d$ in the critical cone violating \eqref{eq:positive-definite-hessian-of-lagrangian}, contradicting the assumtions of the theorem.\hfill\sq
+% We assume that the hessian of the lagrangian is 'positive definite' for the directions in the critical cone
+% Then we say that if that is the case - then we have a local solution.
+% We assume the opposite, that we have a point for which it is true, but which is not a local solution.
+% We then see that this leads to a contradiction, that for all directions d in the critical cone, that implies that 
+% the hessian is 'negative definite' in that direction, leading to a contradiction. :) 
 \subsection{Solutions}
 The exercises chosen for this chapter are 12.1, 12.2, 12.4, 12.11 (not \textbf{b)}) and 12.22. 
 
