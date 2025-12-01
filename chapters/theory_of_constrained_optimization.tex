@@ -107,7 +107,7 @@ Dividing each equation above by $\|d_k\|$ and sending $k\to\infty$ yields,
     \nabla f(x^*)^Td \leq 0, \quad c_\mathcal{I}(x^*)^T d \geq 0, \quad c_\mathcal{E}(x^*)^T d = 0
 \]
 which along with $x^*$ satisfying the KKT conditions implies $d\in \mathcal{C}(x^*, \lambda^*)$.
-We thus produced a vector $d$ in the critical cone violating \eqref{eq:positive-definite-hessian-of-lagrangian}, contradicting the assumtions of the theorem.\hfill\sq
+We thus produced a vector $d$ in the critical cone violating \eqref{eq:positive-definite-hessian-of-lagrangian}, contradicting the assumptions of the theorem.\hfill\sq
 % We assume that the hessian of the lagrangian is 'positive definite' for the directions in the critical cone
 % Then we say that if that is the case - then we have a local solution.
 % We assume the opposite, that we have a point for which it is true, but which is not a local solution.
@@ -129,7 +129,7 @@ To show $c(x) \in C^2$, we compute the first and second derivatives. For $x \neq
     c'(x) &= 6x^5 \sin(1/x) - x^4 \cos(1/x)\\
     c''(x) &= (30x^4-x^2)\sin(1/x) - 10x^3 \cos(1/x)
 \end{align*}
-As $x\to 0$, both $c'$ and $c''$ do since $\sin, \cos$ only take finite values.
+As $x\to 0$, both $c'$ and $c''$ vanish, since $\sin, \cos$ remain bounded.
 Thus, both first and second derivatives have well defined values in the entire domain, $c \in C^2$.
 
 \item[(b)]
@@ -146,12 +146,24 @@ It is also a strict local solution because for any neighborhood of $0$, there ar
 However, this also means that however small we choose our neighborhood around $0$, there will always be a $k$ large enough for other local solutions to exist within the neighborhood. 
 Therefore, $x=0$ is not an isolated local solution.
 \end{enumerate}
-
-
+\subsubsection{Exercise 12.2}
+An isolated solution is necessarily a strict local solution.
+Recalling the
+\begin{Def}[Isolated local solution]
+    A point $x^*$ is called an \textit{isolated local solution} if $x^*\in\Omega$ and there is a neighborhood $\mathcal{N}$ of $x^*$ such that $x^*$ is the only local solution in $\mathcal{N}\cap\Omega$.
+\end{Def}
+This means that if a point $x^*$ is an isolated local solution, then there exists a neighborhood $\mathcal{N}$ where, for all points $x$, the following holds 
+\[
+    f(x^*) < f(x), \quad x, x^* \in \mathcal{N}
+\]
+which is precisely the condition for a strict local solution. 
+It must be a strict inequality in the above condition since if equality held for some points in $\mathcal{N}$, they too would be local solutions, contradicting that $x^*$ was isolated.
+A strict local solution is however not necessarily isolated as we saw in 12.1. There, $x = 0$ was the global optimum which means that for all $x$ in the feasible domain the following holds $f(0) < f(x), \quad x\in\Omega$, i.e. it is strict.
+However, since there is no neighborhood where $x = 0$ is the only local solution, it cannot be isolated despite being strict.
 \subsubsection{Exercise 12.4}
 Just as in the proof of Theorem 2.5\footnote{Found on page 16 of the book.} we prove by contradiction.
 Assume $x$ is a local but not global solution. Then there must exist some $z$ for which $f(z) < f(x)$. 
-From the convexity of the feasible region, we can produce any convex combination of $x$ and $z$ and rest assured of it's feasibility. 
+From the convexity of the feasible region, we can produce any convex combination of $x$ and $z$ and rest assured of its feasibility. 
 So, if we consider the line between $x$ and $z$, which must be contained in $\Omega$ by convexity, we have from the convexity of $f$
 \[
     f(\lambda z + (1 - \lambda)x) \leq \lambda f(z) + (1 - \lambda) f(x) < f(x)
@@ -208,7 +220,7 @@ The gradients of the constraint functions,  $c_1(x) = x_2$, $c_2(x) = x_1^2 - x_
     \nabla c_1(x^*) &= (0, 1)\\
     \nabla c_2(x^*) &= (0, -1).
 \end{align*}
-The set of first-order feasible solutions is the set of directions $d$ (we only have inequality constriants in this case) for which the following conditions holds 
+The set of first-order feasible solutions is the set of directions $d$ (we only have inequality constraints in this case) for which the following conditions holds 
 \[
     d^T \nabla c_i(x) \geq 0, \quad \forall i \in \mathcal{A}(x) \cap \mathcal{I}
 \]
@@ -234,7 +246,7 @@ So, (12.34a) becomes:
         \lambda_2 - \lambda_1 - 1
     \end{pmatrix} \overset{!}{=} 0
 \]
-Choosing Lagrange multiplies such that $\lambda_2 - \lambda_1 = 1$ satisfies the above condition. 
+Choosing Lagrange multipliers such that $\lambda_2 - \lambda_1 = 1$ satisfies the above condition. 
 Since the LICQ does not hold, $\lambda^*$ is not unique.
 For (12.34b) and (12.34c) we already know $x^*$ is feasible.  
 To satisfy (12.34d) we can pick $\lambda_1 = 1$, $\lambda_2 = 2$, for example.
@@ -262,7 +274,7 @@ and for a function to be convex means
 In words, the function between two points $x,y$ is bounded above by the straight line connecting $f(x), f(y)$.
 Additionally, the negative of a convex function is \textit{concave}, which has the same definition, but with $\leq$ switched for $\geq$.
 
-Now for a set to be convex, we require any convex combination of points within the set to also be members of the set\footnote{A convex combination is a linear combination with non-negative coefficents summing to one. If you allow the coefficents to take any value, but still require them to sum to one, it is called an \textit{affine} combination.}.
+Now for a set to be convex, we require any convex combination of points within the set to also be members of the set\footnote{A convex combination is a linear combination with non-negative coefficients summing to one. If you allow the coefficients to take any value, but still require them to sum to one, it is called an \textit{affine} combination.}.
 That is,
 \[
     \lambda x + (1 - \lambda)y = z \overset{!}{\in} \Omega
