@@ -114,7 +114,7 @@ We thus produced a vector $d$ in the critical cone violating \eqref{eq:positive-
 % We then see that this leads to a contradiction, that for all directions d in the critical cone, that implies that 
 % the hessian is 'negative definite' in that direction, leading to a contradiction. :) 
 \subsection{Solutions}
-The exercises chosen for this chapter are 12.1, 12.2, 12.4, 12.11 (not \textbf{b)}) and 12.22. 
+The exercises chosen for this chapter are 12.1, 12.2, 12.4, 12.11, 12.13, 12.19 and 12.22. 
 
 \subsubsection{Exercise 12.1}
 \begin{enumerate}
@@ -227,7 +227,10 @@ The set of first-order feasible solutions is the set of directions $d$ (we only 
 In order for $d^T\nabla c_i(x^*) \geq 0$ for both $i=0$ and $i=1$ we must have $d = (a, 0)^T$.
 Thus, $\mathcal{F}(x^*) = T_\Omega(x^*)$.  
 \item[(b)]
- *\textit{skip until next session}* LICQ are not satisfied since the gradients of the constraint functions are not linearly independent at $x^* = (0,0)^T$
+LICQ are not satisfied since the gradients of the constraint functions are not linearly independent at $x^* = (0,0)^T$.
+There are no equality constraints, so we only need to check if there exists a vector such that $\nabla c_1(x^*)^T w > 0$, $\nabla c_2(x^*)^T w > 0$, since both constraints are active at $x^*$.
+The gradients were computed in (a), from where it is clear there exists no vector for which the inner product with both gradients is larger than 0.
+Thus, neither the MFCQ or the LICQ are satisfied.
 \begin{align*}
     \nabla c_1(x^*) &= (0, 1)\\
     \nabla c_2(x^*) &= (0, -1)
@@ -261,6 +264,48 @@ Lastly, (12.34e) is satisfied since both constraint functions are zero at $x^*$.
 \]
 with $t_k = 1 / k$
 \end{enumerate}
+
+\subsubsection{12.13}
+
+Forming the contraint functions:
+\begin{align*}
+    c_1(x) &= 2 - (x_1 - 1)^2 - (x_2 - 1)^2\\
+    c_2(x) &= 2 - (x_1 - 1)^2 - (x_2 + 1)^2\\
+    c_3(x) &= x_1
+\end{align*}
+
+The gradients are
+\begin{align*}
+    \nabla c_1(x) =& \begin{pmatrix}
+        -2(x_1 - 1)\\
+        -2(x_2 - 1)
+    \end{pmatrix}\\
+    \nabla c_2(x) =& \begin{pmatrix}
+        -2(x_1 - 1)\\
+        -2(x_2 + 1)
+    \end{pmatrix}\\
+    \nabla c_3(x) =& \begin{pmatrix}
+        1\\0
+    \end{pmatrix}.
+\end{align*}
+At $x^* = (0,0)$ we have
+\begin{align*}
+    \nabla c_1(x^*) =& \begin{pmatrix}
+        2\\
+        2
+    \end{pmatrix}\\
+    \nabla c_2(x^*) =& \begin{pmatrix}
+        2\\
+        -2
+    \end{pmatrix}\\
+    \nabla c_3(x^*) =& \begin{pmatrix}
+        1\\0
+    \end{pmatrix}
+\end{align*}
+We have three active constraints, thus LICQ cannot hold.
+However, taking the inner product between the gradients and the vector $w = (1, 0)^T$ yields a positive value for all gradients, thus the MFCQ holds.
+\subsubsection{12.19}
+
 \subsubsection{Exercise 12.22}
 We begin by making explicit the implications of the properties of $c_i(x), i\in\mathcal{E}$ being linear and $-c_i(x), i\in\mathcal{I}$ being convex. 
 The defining property of a linear function is the following

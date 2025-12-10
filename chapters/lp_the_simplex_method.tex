@@ -1,0 +1,72 @@
+\section{Linear Programming: The Simplex Method}
+\subsection{Solutions}
+The exercises chosen for this chapter are 13.1, 
+\subsubsection{13.1}
+To convert this problem to standard form we need to do the following
+\begin{enumerate}
+    \item Reformulate it into a minimization problem. Done by negating the objective function.
+    \item Convert inequality constraints to equality constraints.
+    \item Replace unbounded variables by non-negative variables.
+\end{enumerate}
+The first point is self-explanatory.
+\[
+    \operatorname{max} c^T x + d^T y \to \operatorname{min} -c^T x - d^T y
+\]
+For the second point we begin by splitting the bound on $y$ into two separate constraints
+\[
+    l \leq y \leq u \to \begin{array}{l}
+         y \leq u\\
+         y \geq l
+    \end{array}
+\]
+So the full set of constraints are
+\begin{align*}
+    A_1 x &= b_1\\
+    A_2 x + B_2 y  &\leq b_2\\
+    y &\leq u\\
+    y &\geq l
+\end{align*}
+Adding slack (and \textit{surplus} for the lower bounds) variables yields the following picture
+\begin{align*}
+    A_1 x &= b_1\\
+    A_2 x + B_2 y + s_1 &= b_2\\
+    y + s_2 &= u\\
+    y - s_3 &= 1\\
+    s_1, s_2, s_3 &\geq 0
+\end{align*}
+Finally, we split the currently unbounded variables $x$ and $y$ into negative and positive parts as $x \to x^+ - x^-$ with $x^+, x^-\in \mathbb{R}^+$ and similarily for $y$.
+This gives the final problem
+\[
+    \operatorname{min} -c^T\left(x^+ - x^-\right) - d^T\left(y^+ - y^-\right)
+\]
+subject to
+\begin{align*}
+    A_1 \left(x^+ - x^-\right) &= b_1\\
+    A_2 \left(x^+ - x^-\right) + B_2 \left(y^+ - y^-\right) + s_1 &= b_2\\
+    \left(y^+ - y^-\right) + s_2 &= u\\
+    \left(y^+ - y^-\right) - s_3 &= l\\
+    x^+, x^-, y^+, y^-, s_1, s_2, s_3 &\geq 0.
+\end{align*}
+One can formulate the equality constraints as equation by constructing a large matrix out of the different blocks above:
+\[
+    \begin{pmatrix}
+        A_1 & -A_1 & 0 & 0 & 0 & 0 & 0\\
+        A_2 & -A_2 & B_2 & -B_2 & \mathbbm{1} & 0 & 0\\
+        0 & 0 & \mathbbm{1} & -\mathbbm{1} & 0 & \mathbbm{1} & 0\\
+        0 & 0 & \mathbbm{1} & -\mathbbm{1} & 0 & 0 & -\mathbbm{1}\\
+    \end{pmatrix}\begin{pmatrix}
+        x^+\\
+        x^-\\
+        y^+\\
+        y^-\\
+        s_1\\
+        s_2\\
+        s_3
+    \end{pmatrix} = 
+    \begin{pmatrix}
+        b_1\\
+        b_2\\
+        u\\
+        l
+    \end{pmatrix}
+\]

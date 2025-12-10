@@ -5,12 +5,17 @@
 \usepackage{xcolor}
 \usepackage{hyperref}
 \usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{bbm}
 \usepackage{enumitem}
 \usepackage{graphicx}             % needed to include these graphics
 %\graphicspath{{./Pictures/}}      % only in case you want to keep the pictures in a separate
                                   % subdirectory; also see the appropriate line below
 \usepackage{xparse}
 \usepackage{etoolbox} 
+
+\DeclareMathAlphabet{\mathbbold}{U}{bbold}{m}{n}
 
 % Special command for partial derivatives
 
@@ -82,5 +87,6 @@
 
 \input{chapters/fundamentals_of_unconstrained_optimization}
 \input{chapters/theory_of_constrained_optimization}
+\input{chapters/lp_the_simplex_method.tex}
 
 \end{document}
