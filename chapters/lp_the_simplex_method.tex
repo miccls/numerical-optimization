@@ -6,11 +6,13 @@ Questions that came up during the book club session:
           Yes, it does.
           We begin with a useful 
           \begin{Def}[Convex problem]
-            Given the functions $c_i, i \in \mathcal{I}$, $c_j, j \in \mathcal{E}$ and $f$, in the problem \eqref{eq:constrained-problem}, we say that the optimization problem is \textit{convex} if
+            Given the functions $c_i, i \in \mathcal{I}$, $c_j, j \in \mathcal{E}$ and $f$, in the problem \eqref{eq:constrained-problem}, we say that the optimization problem is \textit{convex} if\footnote{
+                This definition would be less awkward had the feasibility condition been the more conventional $c_i(x) \leq 0$. It would then define $c_i$ to be convex instead of concave.
+            }
             \begin{align*}
                 &\text{All }c_i\text{ are concave.}\quad \implies \quad \nabla c_i(x)^T(y - x) \geq c_i(y) - c_i(x)\\
                 &\text{All }c_j\text{ are affine.}\quad \implies \quad \nabla c_j(x)^T(y - x) = c_j(y) - c_j(x)\\
-                &f\text{ is convex.}\quad \implies \quad \nabla f(x)^T(y - x) \leq f(y) - f(x) 
+                &f\text{ is convex.}\quad \implies \quad \nabla f(x)^T(y - x) \leq f(y) - f(x)
             \end{align*}
             \label{def:convex-problem}
           \end{Def} 
