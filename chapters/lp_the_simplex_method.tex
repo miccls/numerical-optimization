@@ -1,13 +1,47 @@
 \section{Linear Programming: The Simplex Method}
+
+Questions that came up during the book club session:
+\begin{enumerate}
+    \item Does convexity of a problem imply that the KKT conditions are sufficient?
+          Yes, it does.
+          We begin with a useful 
+          \begin{Def}[Convex problem]
+            Given the functions $c_i, i \in \mathcal{I}$, $c_j, j \in \mathcal{E}$ and $f$, in the problem \eqref{eq:constrained-problem}, we say that the optimization problem is \textit{convex} if
+            \begin{align*}
+                &\text{All }c_i\text{ are concave.}\quad \implies \quad \nabla c_i(x)^T(y - x) \geq c_i(y) - c_i(x)\\
+                &\text{All }c_j\text{ are affine.}\quad \implies \quad \nabla c_j(x)^T(y - x) = c_j(y) - c_j(x)\\
+                &f\text{ is convex.}\quad \implies \quad \nabla f(x)^T(y - x) \leq f(y) - f(x) 
+            \end{align*}
+            \label{def:convex-problem}
+          \end{Def} 
+
+          \begin{Thm}[Sufficiency of KKT for convex problems]
+            Given the problem \eqref{eq:constrained-problem}, and a point $x^*\in\Omega$ for which the KKT conditions are sastified for some $\lambda^*$.
+            If the problem is convex as defined in definition \ref{def:convex-problem}, then $x^*$ is a global minimizer.
+          \end{Thm}
+          \textit{Proof} Pick any $x\in\Omega$.
+          From the definition \ref{def:convex-problem}, we have for the constraints that
+          \begin{align*}
+            \nabla c_i(x^*)^T(x - x^*) &\geq c_i(x) - c_i(x^*) = c_i(x) \geq 0\\
+            \nabla c_j(x^*)^T(x - x^*) &= c_j(x) - c_j(x^*) = 0\\
+          \end{align*}
+          Then, by inspecting convexity condition on the objective function we obtain
+          \begin{align*}
+            f(x) - f(x^*) \geq \nabla f(x^*)^T(x - x^*) = \sum_{i\in\mathcal{A}(x^*)} \lambda_i \nabla c_i (x - x^*)  \geq 0
+          \end{align*}
+          Thus, $f(x) \geq f(x^*)$ for any $x \in \Omega$\hfill\sq. 
+    \item Can we formulate some more compelling, detailed version of the proof of part (ii) of the strong duality theorem?
+\end{enumerate}
+
 \subsection{Solutions}
 The exercises chosen for this chapter are 13.1, 
 \subsubsection{13.1}
 To convert this problem to standard form we need to do the following
-\begin{enumerate}
+\begin{itemize}
     \item Reformulate it into a minimization problem. Done by negating the objective function.
     \item Convert inequality constraints to equality constraints.
     \item Replace unbounded variables by non-negative variables.
-\end{enumerate}
+\end{itemize}
 The first point is self-explanatory.
 \[
     \operatorname{max} c^T x + d^T y \to \operatorname{min} -c^T x - d^T y
@@ -70,3 +104,27 @@ One can formulate the equality constraints as equation by constructing a large m
         l
     \end{pmatrix}
 \]
+\subsubsection{13.2}
+Verify that the dual of 
+\[
+    \operatorname{max} b^T\lambda, \quad \text{subject to } A^T\lambda \leq c
+\]
+is the primal. 
+Recall that the dual problem is:
+\[
+    \underset{\lambda \geq 0}{\operatorname{max}} \> \underset{x}{\operatorname{min}} \> \mathcal{L}(x, \lambda)
+\]
+The Lagrangian is, in this case (not the order of the variables)
+\begin{align*}
+    \mathcal{L}(\lambda, x) &= -b^T\lambda - x^T(c - A^T\lambda)\\
+                            &= (x^T A^T - b^T)\lambda - x^T c.
+\end{align*}
+The dual of this problem is then
+\[
+    \underset{x \geq 0}{\operatorname{max}} \> \underset{\lambda}{\operatorname{min}} \> \mathcal{L}(\lambda, x)
+\]
+Unless $b^T - x^T A^T = 0 \implies Ax = b$ is satisfied, the problem is unbounded. Therefore we may enforce $Ax = b$ as a constraint, and we obtain the problem
+\[
+    \operatorname{max} -x^Tc, \text{ Subject to } Ax = b, \quad x \geq 0 ,
+\]
+which can be turned into the primal by changing $\operatorname{max} -x^Tc \to \operatorname{min} c^Tx$.
