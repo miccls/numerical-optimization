@@ -135,9 +135,41 @@ class TestSolver(unittest.TestCase):
         c = np.array([-10, 57, 9, 24, 0, 0, 0])
 
         simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
-        status, _ = simplex_solver.solve(lp_problem.LpProblem(A,b,c), log = True)
+        status, _ = simplex_solver.solve(lp_problem.LpProblem(A,b,c))
 
         self.assertTrue(status == solver.SolverStatus.SUCCESS, f"Expected status to be SUCCESS, but got {status}")
+
+    def test_infeasible_problem(self):
+        # min -x1 s.t. x1 <= 1, x1 >= 2
+        # Standard form: x1 + s1 = 1, x1 - s2 = 2
+        A = np.array([
+            [1, 1, 0],
+            [1, 0, -1]
+        ])
+        b = np.array([1, 2])
+        c = np.array([-1, 0, 0])
+
+        simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
+        test_problem = lp_problem.LpProblem(A, b, c)
+        status, _ = simplex_solver.solve(test_problem)
+        
+        self.assertEqual(status, solver.SolverStatus.INFEASIBLE)
+
+    def test_unbounded_problem(self):
+        # min -2*x1 - x2 s.t. x1 - x2 <= 10, 2*x1 <= 40
+        # Standard form: x1 - x2 + s1 = 10, 2*x1 + s2 = 40
+        A = np.array([
+            [1, -1, 1, 0],
+            [2, 0, 0, 1]
+        ])
+        b = np.array([10, 40])
+        c = np.array([-2, -1, 0, 0])
+
+        simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
+        test_problem = lp_problem.LpProblem(A, b, c)
+        status, _ = simplex_solver.solve(test_problem)
+        
+        self.assertEqual(status, solver.SolverStatus.UBOUNDED)
 
 
 if __name__ == "__main__":

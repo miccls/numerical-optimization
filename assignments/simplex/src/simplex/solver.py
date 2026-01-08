@@ -7,7 +7,7 @@ from typing import Optional, Tuple
 import numpy as np
 from jaxtyping import Float
 
-from simplex import lp_problem, math, pivoting_strategy
+from . import lp_problem, math, pivoting_strategy
 
 class SolverStatus(Enum):
     SUCCESS = 0
@@ -21,6 +21,28 @@ class SolverStatus(Enum):
 @dataclass
 class Solver:
     pivoting_strategy_: pivoting_strategy.PivotingStrategy
+
+    def _check_cycling(
+        self,
+        objective_history: list[float],
+        basis_history: list[tuple[int, ...]],
+        current_basis: list[int],
+    ) -> Optional[SolverStatus]:
+        """Checks for cycling in the simplex algorithm."""
+        if len(objective_history) < 2:
+            return None
+
+        # A cycle can only occur with degenerate pivots (no change in objective)
+        if abs(objective_history[-1] - objective_history[-2]) < 1e-9:
+            basis_signature = tuple(sorted(current_basis))
+            if basis_signature in basis_history:
+                return SolverStatus.CYCLING
+            basis_history.append(basis_signature)
+        else:
+            # If the objective improved, we are not cycling, so we can clear the history.
+            basis_history.clear()
+        
+        return None
 
     def find_basic_feasible_solution(
         self,
@@ -60,12 +82,12 @@ class Solver:
         Binv: Float[np.ndarray, "constraints constraints"] = np.linalg.inv(A[:, B])
         
         # x_basis is the values of the basic variables
-        x_basis: Float[np.ndarray, "constraints"] = Binv @ problem.rhs
+        x_basis: Float[np.ndarray, "constraints"] = [] # TODO
 
         if log:
             print("Starting simplex algorithm...")
 
-        basis_history: list[list[int]] = [] # Used to check for cycling, only degenerate steps are recorded.
+        basis_history: list[tuple[int, ...]] = [] # Used to check for cycling, only degenerate steps are recorded.
         objective_history: list[float] = [c[B] @ x_basis]
         iteration: int = 1
         while True:
@@ -83,10 +105,6 @@ class Solver:
             # d is the "basic direction" of the entering variable
             d: Float[np.ndarray, "constraints"] = Binv @ A[:, entering_variable]
             
-            # -d is the change in the current basic variables per unit change of the entering variable.
-            # If all elements of -d are >= 0, then we can decrease the objective by an arbitrarily large amount
-            # since the entering variable has a negative reduced cost and can be increased forever without ever
-            # violating any constraint (basic variables reacing 0).
             if np.all(d <= 0):
                 status = SolverStatus.UBOUNDED
                 break
@@ -103,15 +121,9 @@ class Solver:
             # TODO...
 
             objective_history.append(c[B] @ x_basis)
-            # Check for cycling
-            if objective_history[-1] == objective_history[-2]:
-                # Update basis history if objective doesn't change
-                basis_signature = tuple(sorted(B))
-                if basis_signature in basis_history:
-                    status = SolverStatus.CYCLING
-                    break
-                basis_history.append(basis_signature)
-                pass
+            status = self._check_cycling(objective_history, basis_history, B)
+            if status == SolverStatus.CYCLING:
+                break
 
             if log:
                 print(

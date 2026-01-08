@@ -50,17 +50,20 @@ class SmallestSubscriptRule:
         Among the variables which allow the smallest change for the entering variable,
         the one with the smallest subscript will be chosen.
         """
-        basic_vars_arr = np.array(basic_vars)
-
         valid_pivot_mask = u > SmallestSubscriptRule.EPSILON
         
         if not np.any(valid_pivot_mask):
             # If no u > 0, the problem is unbounded
             raise RuntimeError("No valid pivot found (Problem is Unbounded).")
 
+        # Filter to only valid pivots
         valid_ratios = ratios[valid_pivot_mask]
+        valid_basic_vars = np.array(basic_vars)[valid_pivot_mask]
+
         min_ratio = np.min(valid_ratios)
-        is_min_ratio = np.isclose(ratios, min_ratio)
         
-        candidate_mask = valid_pivot_mask & is_min_ratio
-        return int(np.min(basic_vars_arr[candidate_mask]))
+        # Find all basic variables that correspond to the minimum ratio
+        min_ratio_candidates = valid_basic_vars[np.isclose(valid_ratios, min_ratio)]
+        
+        # Of those, pick the one with the smallest index
+        return int(np.min(min_ratio_candidates))

@@ -7,6 +7,10 @@ name = "simplex"
 version = "0.1.0"
 description = "Simplex algorithm"
 requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "jaxtyping",
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
