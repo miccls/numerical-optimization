@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Welcome to the Simplex Algorithm programming assignment! The goal of this assignment is to implement a robust version of the revised simplex method for solving linear programming problems of the form:
+Welcome to the Simplex Algorithm programming assignment! The goal of this assignment is to implement a robust version of the revised simplex method for solving linear programming problems on standard form:
 
 Minimize: `c^T * x`
 Subject to: `A * x = b`, `x >= 0`
