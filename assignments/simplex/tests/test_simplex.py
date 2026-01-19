@@ -172,5 +172,26 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(status, solver.SolverStatus.UBOUNDED)
 
 
+    def test_example_13_1_from_book(self):
+        # Lukas spotted typo in book, test to verify!
+        
+        A = np.array([
+            [1,1,1,0],
+            [2,0.5,0,1]
+        ])
+
+        b = np.array([5,8]).T
+
+        c = np.array([-4, -2, 0, 0])
+
+        simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
+        status, (B, solution, value) = simplex_solver.solve(lp_problem.LpProblem(A,b,c))
+        print("Basis: ", B)
+        print("Solution: ", solution)
+        print("Value: ", value)
+
+        self.assertTrue(np.isclose(value, -52 / 3))
+        self.assertTrue(status == solver.SolverStatus.SUCCESS, f"Expected status to be SUCCESS, but got {status}")
+
 if __name__ == "__main__":
     unittest.main()
