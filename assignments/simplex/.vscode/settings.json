@@ -9,4 +9,7 @@
     },
     "python.analysis.typeCheckingMode": "off", // Rely on mypy only
     "mypy-type-checker.importStrategy": "fromEnvironment",
+    "cSpell.words": [
+        "jaxtyping"
+    ],
 }

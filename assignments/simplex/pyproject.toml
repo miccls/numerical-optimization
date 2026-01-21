@@ -5,7 +5,8 @@ description = "Simplex algorithm"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    # jaxtyping supports runtime checking so add it here instead of in the dev dependencies
+    "beartype>=0.22.9",
+    # jaxtyping runtime type checking
     "jaxtyping>=0.3.5",
     "numpy>=2.4.1",
 ]
@@ -62,6 +63,7 @@ lint.ignore = [
     "FIX002", # overlaps with TD
     "TRY003", # don't enforce creating a separate error class for each error message
     "E501",   # ignore line length violations
+    "F722",   # Syntax error in forward annotation: Unexpected token at the end of an expression. To support jaxtyping https://docs.kidger.site/jaxtyping/faq/#flake8-or-ruff-are-throwing-an-error
 ]
 
 [tool.ruff.lint.flake8-tidy-imports]

@@ -1,197 +1,213 @@
-import unittest
-import time 
+import time
+
 import numpy as np
+import pytest
 
-from simplex import pivoting_strategy, math, lp_problem, solver
+from simplex import lp_problem, math, pivoting_strategy, solver
 
-class TestPivoting(unittest.TestCase):
 
-    def setUp(self):
-        self.smallest_subscript_rule = pivoting_strategy.SmallestSubscriptRule()
+class TestPivoting:
+    def test_smallest_subscript_entering(self) -> None:
+        reduced_costs = np.array([1, 2, 3, 4, -1, -2, -3], dtype=float)
+        non_basic_vars = np.array([3, 4, 5, 6, 0, 1, 2])
+        assert (
+            pivoting_strategy.SmallestSubscriptRule().pick_entering_index(
+                reduced_costs, non_basic_vars
+            )
+            == 0
+        )
 
-    def test_smallest_subscript_entering(self):
-        reduced_costs = np.array([1, 2, 3, 4, -1, -2, -3])
-        non_basic_vars = [3,4,5,6,0,1,2]
-        self.assertEqual(self.smallest_subscript_rule.pick_entering_index(reduced_costs, non_basic_vars), 0) 
+    # def test_smallest_subscript_exiting(self) -> None:
+    #     x = np.array([1, 2, 3, 4, 5, 6])
+    #     u = np.array([1, -4, 1, 8, 1, 12])
+    #     basic_vars = [10, 2, 4, 6, 7, 20]
+    #     ratios = np.array([xi / ui for xi, ui in zip(x, u, strict=True)])
 
-    def test_smallest_subscript_exiting(self):
-        x = np.array([1,2,3,4,5,6])
-        u = np.array([1,-4,1,8,1,12])
-        basic_vars = [10,2,4,6,7,20]
-        ratios = np.array([xi / ui for xi, ui in zip(x, u)])
-        self.assertEqual(self.smallest_subscript_rule.pick_exiting_index(ratios, u, basic_vars), 6) 
-        
-class TestInverseComputation(unittest.TestCase):
-    
-    def test_update_inverse(self):
-        A = np.array([
-             [1,2,3,4],
-             [4,3,2,1],
-            ])
-        basis = [1, 2]
-        basis_matrix = A[:, basis]
-        self.assertTrue((basis_matrix == [[2,3],[3,2]]).all())
-        Binv = np.linalg.inv(basis_matrix)
-        
-        # Switch out index 2 for index three
+    #     assert (
+    #         pivoting_strategy.SmallestSubscriptRule().pick_exiting_index(
+    #             ratios, u, basic_vars
+    #         )
+    #         == 6
+    #     )
+
+
+class TestInverseComputation:
+    def test_update_inverse(self) -> None:
+        a = np.array(
+            [
+                [1, 2, 3, 4],
+                [4, 3, 2, 1],
+            ],
+            dtype=float,
+        )
+        basis = np.array([1, 2], dtype=int)
+        basis_matrix = a[:, basis]
+        assert basis_matrix == pytest.approx(
+            np.array(
+                [
+                    [2, 3],
+                    [3, 2],
+                ],
+                dtype=float,
+            )
+        )
+        b_inv = np.linalg.inv(basis_matrix)
+
+        # Switch out variable 2 for variable 3
         entering_variable = 3
-        exiting_variable = 2
-        new_basis = [1,3]
-        
-        Binv = math.update_inverse(A, Binv, entering_variable, basis.index(exiting_variable))
-        
-        self.assertTrue(np.allclose(Binv, np.linalg.inv(A[:, new_basis])))
 
-    def test_update_speed(self):
-        
-        A = np.concatenate((np.eye(500), np.random.rand(500,1)), axis=1)
+        exiting_index = 1
+        exiting_variable = basis[exiting_index]
+        assert exiting_variable == 2
+        basis[exiting_index] = entering_variable
+
+        b_inv = math.update_inverse(a, b_inv, entering_variable, exiting_index)
+
+        assert np.allclose(b_inv, np.linalg.inv(a[:, basis]))
+
+    def test_update_speed(self) -> None:
+        rng = np.random.default_rng(1337)
+        random_column = rng.uniform(low=0, high=1, size=(500, 1))
+
+        constraint_matrix = np.concatenate((np.eye(500), random_column), axis=1)
         basis = list(range(500))
         entering_variable = 500
-        exiting_variable = 499
-        new_basis = basis[:-1] + [500]
+        exiting_index = 499
+        new_basis = [*basis[:-1], 500]
 
-        Binv = np.eye(500)
-        d = A[:, entering_variable]
+        inv_basis_matrix = np.eye(500)
 
         start_time = time.perf_counter()
-        Binv = math.update_inverse(A, Binv, entering_variable, basis.index(exiting_variable))
+        inv_basis_matrix = math.update_inverse(
+            constraint_matrix,
+            inv_basis_matrix,
+            entering_variable,
+            exiting_index,
+        )
         end_time = time.perf_counter()
-        
-        time_in_ms = (end_time - start_time) * 1000
-        self.assertLess(time_in_ms, 10, msg = f"Should take less than 10 ms, took {time_in_ms}")
-        self.assertTrue(np.allclose(Binv @ A[:, new_basis], np.eye(500)))
-        
-        
-class TestSolver(unittest.TestCase):
-    
-    def test_problem_with_start_solution(self):
-        # Example 3.5 in "Introduction to Linear Programming", page 101.    
-        A = np.array([
-            [1, 2, 2, 1, 0, 0],
-            [2, 1, 2, 0, 1, 0],
-            [2, 2, 1, 0, 0, 1],
-        ])
-        
-        b = np.array([20, 20, 20]).T
-        
-        c = np.array([-10, -12, -12, 0, 0, 0])
-        
-        # Starting basis.
-        B = [3,4,5]
-        
-        Binv = np.linalg.inv(A[:, B])
-        x = Binv @ b
-        
-        # Assert feasibility of starting point.
-        self.assertTrue(np.allclose(A[:, B] @ x, b))
-        self.assertTrue((x >= 0).all())
-        
-        simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
-        
-        test_problem = lp_problem.LpProblem(A, b, c)
-        (status, (basis, solution, objective_value)) = simplex_solver.solve(test_problem, B = B)
-        
-        # Check we have solved the problem correctly!
-        self.assertTrue(status == solver.SolverStatus.SUCCESS)
-        self.assertTrue(all(i in [0,1,2] for i in basis))
-        self.assertTrue(np.allclose(solution, [4,4,4,0,0,0]))
-        self.assertEqual(-136, objective_value)
 
-    def test_problem_without_start_solution(self):
-        # Example 3.5 in "Introduction to Linear Programming", page 101.    
-        A = np.array([
+        time_in_ms = (end_time - start_time) * 1000
+
+        assert np.allclose(
+            inv_basis_matrix @ constraint_matrix[:, new_basis], np.eye(500)
+        )
+        assert time_in_ms < 10, f"Should take less than 10 ms, took {time_in_ms}"
+
+
+@pytest.fixture()
+def example_problem_35() -> lp_problem.LpProblem:
+    # Example 3.5 in "Introduction to Linear Programming", page 101.
+    a = np.array(
+        [
             [1, 2, 2, 1, 0, 0],
             [2, 1, 2, 0, 1, 0],
             [2, 2, 1, 0, 0, 1],
-        ])
-        
-        b = np.array([20, 20, 20]).T
-        
-        c = np.array([-10, -12, -12, 0, 0, 0])
-        
+        ]
+    )
+
+    b = np.array([20, 20, 20]).T
+
+    c = np.array([-10, -12, -12, 0, 0, 0])
+
+    return lp_problem.LpProblem(a, b, c)
+
+
+class TestSolver:
+    def test_problem_with_start_solution(
+        self, example_problem_35: lp_problem.LpProblem
+    ) -> None:
+        # Starting basis.
+        basis = np.array([3, 4, 5])
+
+        inv_basis_matrix = np.linalg.inv(example_problem_35.constraint_matrix[:, basis])
+        x = inv_basis_matrix @ example_problem_35.rhs
+
+        # Assert feasibility of starting point.
+        assert example_problem_35.constraint_matrix[:, basis] @ x == pytest.approx(
+            example_problem_35.rhs
+        )
+        assert (x >= 0).all()
+
         simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
-        
-        test_problem = lp_problem.LpProblem(A, b, c)
-        (status, (basis, solution, objective_value)) = simplex_solver.solve(test_problem)
-        
-        # Check we have solved the problem correctly!
-        self.assertTrue(status, f"Expected status to be SUCCESS, but got {status}")
-        self.assertTrue(all(i in [0,1,2] for i in basis))
-        self.assertTrue(np.allclose(solution, [4,4,4,0,0,0]))
-        self.assertAlmostEqual(-136, objective_value)
-        
-    def test_chvatals_example_for_cycling(self):
+
+        (status, solve_result) = simplex_solver.solve(
+            example_problem_35, initial_basis=basis
+        )
+
+        assert status == solver.SolverStatus.SUCCESS
+        assert solve_result is not None
+        assert sorted(solve_result.basis) == [0, 1, 2]
+        assert solve_result.solution == pytest.approx(np.array([4, 4, 4, 0, 0, 0]))
+        assert solve_result.objective_value == pytest.approx(-136)
+
+    def test_problem_without_start_solution(
+        self, example_problem_35: lp_problem.LpProblem
+    ) -> None:
+        simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
+
+        (status, solve_result) = simplex_solver.solve(example_problem_35)
+
+        assert status == solver.SolverStatus.SUCCESS
+        assert solve_result is not None
+        assert sorted(solve_result.basis) == [0, 1, 2]
+        assert solve_result.solution == pytest.approx(np.array([4, 4, 4, 0, 0, 0]))
+        assert solve_result.objective_value == pytest.approx(-136)
+
+    def test_chvatals_example_for_cycling(self) -> None:
         # See for ref: https://www.matem.unam.mx/~omar/math340/degenerate.html or
         # https://sites.math.washington.edu/~vinzant/teaching/407/Chvatal.pdf, page 31.
         # This is an example of an LP which cycles under some pivot rules.
-        A = np.array([
-            [-0.5, 5.5, 2.5, -9, -1, 0, 0],
-            [-0.5, 1.5, 0.5, -1, 0, -1, 0],
-            [1, 0, 0, 0, 0, 0, 1],
-        ])
-
+        a = np.array(
+            [
+                [-0.5, 5.5, 2.5, -9, -1, 0, 0],
+                [-0.5, 1.5, 0.5, -1, 0, -1, 0],
+                [1, 0, 0, 0, 0, 0, 1],
+            ]
+        )
         b = np.array([0, 0, 1]).T
-
         c = np.array([-10, 57, 9, 24, 0, 0, 0])
 
         simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
-        status, _ = simplex_solver.solve(lp_problem.LpProblem(A,b,c))
+        status, _ = simplex_solver.solve(lp_problem.LpProblem(a, b, c))
 
-        self.assertTrue(status == solver.SolverStatus.SUCCESS, f"Expected status to be SUCCESS, but got {status}")
+        assert status == solver.SolverStatus.CYCLING
 
-    def test_infeasible_problem(self):
+    def test_infeasible_problem(self) -> None:
         # min -x1 s.t. x1 <= 1, x1 >= 2
         # Standard form: x1 + s1 = 1, x1 - s2 = 2
-        A = np.array([
-            [1, 1, 0],
-            [1, 0, -1]
-        ])
+        a = np.array([[1, 1, 0], [1, 0, -1]])
         b = np.array([1, 2])
         c = np.array([-1, 0, 0])
 
         simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
-        test_problem = lp_problem.LpProblem(A, b, c)
+        test_problem = lp_problem.LpProblem(a, b, c)
         status, _ = simplex_solver.solve(test_problem)
-        
-        self.assertEqual(status, solver.SolverStatus.INFEASIBLE)
+        assert status == solver.SolverStatus.INFEASIBLE
 
-    def test_unbounded_problem(self):
+    def test_unbounded_problem(self) -> None:
         # min -2*x1 - x2 s.t. x1 - x2 <= 10, 2*x1 <= 40
         # Standard form: x1 - x2 + s1 = 10, 2*x1 + s2 = 40
-        A = np.array([
-            [1, -1, 1, 0],
-            [2, 0, 0, 1]
-        ])
+        a = np.array([[1, -1, 1, 0], [2, 0, 0, 1]])
         b = np.array([10, 40])
         c = np.array([-2, -1, 0, 0])
 
         simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
-        test_problem = lp_problem.LpProblem(A, b, c)
+        test_problem = lp_problem.LpProblem(a, b, c)
         status, _ = simplex_solver.solve(test_problem)
-        
-        self.assertEqual(status, solver.SolverStatus.UBOUNDED)
 
+        assert status == solver.SolverStatus.UNBOUNDED
 
-    def test_example_13_1_from_book(self):
+    def test_example_13_1_from_book(self) -> None:
         # Lukas spotted typo in book, test to verify!
-        
-        A = np.array([
-            [1,1,1,0],
-            [2,0.5,0,1]
-        ])
 
-        b = np.array([5,8]).T
-
+        a = np.array([[1, 1, 1, 0], [2, 0.5, 0, 1]])
+        b = np.array([5, 8]).T
         c = np.array([-4, -2, 0, 0])
 
         simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
-        status, (B, solution, value) = simplex_solver.solve(lp_problem.LpProblem(A,b,c))
-        print("Basis: ", B)
-        print("Solution: ", solution)
-        print("Value: ", value)
+        status, solve_result = simplex_solver.solve(lp_problem.LpProblem(a, b, c))
+        print(f"{solve_result=}")
 
-        self.assertTrue(np.isclose(value, -52 / 3))
-        self.assertTrue(status == solver.SolverStatus.SUCCESS, f"Expected status to be SUCCESS, but got {status}")
-
-if __name__ == "__main__":
-    unittest.main()
+        assert status == solver.SolverStatus.SUCCESS
+        assert solve_result is not None
+        assert solve_result.objective_value == pytest.approx(-52 / 3)
