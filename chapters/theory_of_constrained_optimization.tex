@@ -1,14 +1,14 @@
 \section{Theory of Constrained Optimization}
 The formulation of constrained problems in this book,
 \begin{equation}
-    \underset{x\in \mathbb{R}^n}{\min} f(x) \qquad \text{subject to} \quad 
+    \underset{x\in \mathbb{R}^n}{\min} f(x) \qquad \text{subject to} \quad
     \begin{cases}
-        c_i(x) &= 0, \quad i\in\mathcal{E},\\
-        c_i(x) &\geq 0, \quad i\in\mathcal{I}
+        c_i(x) & = 0, \quad i\in\mathcal{E},   \\
+        c_i(x) & \geq 0, \quad i\in\mathcal{I}
     \end{cases}
     \label{eq:constrained-problem}
 \end{equation}
-is standard in the literature, except for the sign chosen of the inequality constraint functions ($i\in\mathcal{I}$) which may vary from author to author. 
+is standard in the literature, except for the sign chosen of the inequality constraint functions ($i\in\mathcal{I}$) which may vary from author to author.
 By defining the feasible set as
 \begin{equation}
     \Omega \equiv \left\{ x \in \mathbb{R}^n | c_i(x) = 0, \forall i\in\mathcal{E}, c_i(x) \geq 0, \forall i \in \mathcal{I} \right\}
@@ -21,18 +21,18 @@ the authors present a very elegant formulation of the constrained problem as
 \subsection{Farkas' lemma}
 In the proof of the first order optimality conditions (Theorem 12.1 in the book) the authors use
 \begin{Lma}[Farkas]
-    Let the cone K be defined as 
+    Let the cone K be defined as
     \[
         K = \{By + Cw|y\geq 0\}.
     \]
-    Given any vector $g\in\mathbb{R}^n$ we have either that $g\in K$ (i.e. $g = By + Cw$ for some $y\geq 0, w \in \mathbb{R}^n$) or that there exists $d\in\mathbb{R}^n$ satisfying 
+    Given any vector $g\in\mathbb{R}^n$ we have either that $g\in K$ (i.e. $g = By + Cw$ for some $y\geq 0, w \in \mathbb{R}^n$) or that there exists $d\in\mathbb{R}^n$ satisfying
     \begin{equation}
         g^T d < 0, \quad B^Td \geq 0, \quad C^T d = 0
         \label{eq:farkas_conditions}
-\end{equation}
+    \end{equation}
 \end{Lma}
 I felt the rest of the proof, after Farkas' lemma, was a bit thin so I thought I would expand a bit here.
-The proof assumes the constraint qualification LICQ, that the gradients of the active constraints $\nabla c_i(x^*), \> i\in \mathcal{A}(x^*)$ at the optimum are linearly independent. 
+The proof assumes the constraint qualification LICQ, that the gradients of the active constraints $\nabla c_i(x^*), \> i\in \mathcal{A}(x^*)$ at the optimum are linearly independent.
 Then they show that there exists a vector $\lambda^*$ of Lagrange multipliers which satisfies the KKT conditions.
 They have previously showed that for all vectors $d$ in the tangent cone at the optimum $T_\Omega(x^*)$, the following holds
 \[
@@ -41,11 +41,11 @@ They have previously showed that for all vectors $d$ in the tangent cone at the 
 They also show that if the LICQ hold, $T_\Omega(x^*) = \mathcal{F}(x^*)$. Recalling the definition of $\mathcal{F}(x^*)$, the set of first order feasible directions,
 \[
     \mathcal{F}(x^*) = \left\{ d \> \left\vert \begin{aligned}
-        \quad&d^T \nabla c_i(x^*) \geq 0,\quad \forall i \in A_\mathcal{I}(x^*)\cap\mathcal{I}\\
-        \quad&d^T \nabla c_i(x^*) = 0, \quad \forall i\in\mathcal{E}
+        \quad & d^T \nabla c_i(x^*) \geq 0,\quad \forall i \in A_\mathcal{I}(x^*)\cap\mathcal{I} \\
+        \quad & d^T \nabla c_i(x^*) = 0, \quad \forall i\in\mathcal{E}
     \end{aligned}\right.\right\}
 \]
-By identifying $B$ with the inequality constraint gradients and $C$ with the equality constraint gradients in Farkas' lemma, we see that there must be some vector $\lambda_i^* \geq 0, i \in \mathcal{A}(x^*) \cap \mathcal{I}$ for which 
+By identifying $B$ with the inequality constraint gradients and $C$ with the equality constraint gradients in Farkas' lemma, we see that there must be some vector $\lambda_i^* \geq 0, i \in \mathcal{A}(x^*) \cap \mathcal{I}$ for which
 \[
     \nabla f(x^*) = \nabla c_i(x)\lambda^*
 \]
@@ -53,54 +53,54 @@ since all vectors $d$ that satisfy the latter two of the conditions in \eqref{eq
 The proof is then finished by verifying that this $\lambda^*$, together with the local solution $x^*$ does in fact satisfy all the KKT conditions.
 \subsection{Another proof of the sufficient conditions}
 I found the proof of the sufficient conditions to be somewhat confusing, so I decided to include a similar proof found in the book ''Foundations of Optimization'' by Osman Güler.
-We begin by stating the 
+We begin by stating the
 \begin{Thm}[Second-order sufficient conditions]
-Let $x^*$ be a feasible point for the problem \eqref{eq:constrained-problem} that satisfies the KKT conditions with Lagrange multiplier $\lambda^*$.
-If 
-\be
+    Let $x^*$ be a feasible point for the problem \eqref{eq:constrained-problem} that satisfies the KKT conditions with Lagrange multiplier $\lambda^*$.
+    If
+    \be
     d^T\nabla_x^2\mathcal{L}(x^*, \lambda^*) d > 0
     \label{eq:positive-definite-hessian-of-lagrangian}
-\ee
-for all $d\neq 0$ for which the following conditions hold\footnote{
-    This set is also known as the critical cone at $x^*$, denoted $\mathcal{C}(x^*, \lambda^*)$.
-    The critical cone is the set of directions $d\in\mathcal{F}(x^*)$ for which it is unknown if the objective will increase or decrease from first-order information only.
-}
-\begin{align*}% TODO Reverse this list.
-    \nabla c_i(x^*)^T d =& 0, \quad \forall i\in\mathcal{E},\\
-    \nabla c_i(x^*)^T d =& 0, \quad \forall i\in\mathcal{I}\cap\mathcal{A}(x^*) \text{ with } \lambda^*_i > 0\\
-    \nabla c_i(x^*)^T d \geq& 0, \quad \forall i\in\mathcal{I}\cap\mathcal{A}(x^*),
-\end{align*}
-then $x^*$ is a strict local minimizer of \eqref{eq:constrained-problem} and there exists a constant $c$ and an open ball $B(x^*, \epsilon)$ such that
-\be
+    \ee
+    for all $d\neq 0$ for which the following conditions hold\footnote{
+        This set is also known as the critical cone at $x^*$, denoted $\mathcal{C}(x^*, \lambda^*)$.
+        The critical cone is the set of directions $d\in\mathcal{F}(x^*)$ for which it is unknown if the objective will increase or decrease from first-order information only.
+    }
+    \begin{align*}% TODO Reverse this list.
+        \nabla c_i(x^*)^T d =    & 0, \quad \forall i\in\mathcal{E},                                                  \\
+        \nabla c_i(x^*)^T d =    & 0, \quad \forall i\in\mathcal{I}\cap\mathcal{A}(x^*) \text{ with } \lambda^*_i > 0 \\
+        \nabla c_i(x^*)^T d \geq & 0, \quad \forall i\in\mathcal{I}\cap\mathcal{A}(x^*),
+    \end{align*}
+    then $x^*$ is a strict local minimizer of \eqref{eq:constrained-problem} and there exists a constant $c$ and an open ball $B(x^*, \epsilon)$ such that
+    \be
     f(x) \geq f(x^*) + c\|x - x^*\|^2, \quad \forall x\in B(x^*, \epsilon) \cap \Omega
     \label{eq:sufficient-condition-statement}
-\ee
+    \ee
 \end{Thm}
 \textit{Proof}. Suppose, for contradiction, there are some directions for which \eqref{eq:positive-definite-hessian-of-lagrangian} is satisfied, but not \eqref{eq:sufficient-condition-statement}.
 Let $\epsilon_k$ be some positive sequence of numbers tending to 0 as $k$ goes to infinity, then there exists a sequence of feasible points $x_k \to x^*$, such that
-\[ 
+\[
     f(x_k) < f(x^*) + \epsilon_k\|x^* - x_k\|^2.
 \]
 Define $d_k = x_k - x^*$ and let $d_k / \|d_k\| \to d$ with $\|d\| = 1$.
 Then, on one hand we have
 \begin{align*}
-    f(x_k) &<\> f(x^*) + \epsilon_k \|d_k\|^2 + 0\\
-    \epsilon_k\|d\|^2 &>\> f(x_k) - f(x^*) - \sum_{i\mathcal{A}(x^*)} \lambda^*_i c_i(x_k)\\
-    &= \mathcal{L}(x_k, \lambda^*) - \mathcal{L}(x^*, \lambda^*)\\
-    &= \nabla_x\mathcal{L}(x^*,\lambda^*)^T d_k + \frac{1}{2}d_k^T\nabla_x^2\mathcal{L}(x^*, \lambda^*)d_k + o(\|d_k\|^2)\\
-    &= \frac{1}{2}d_k^T\nabla_x^2\mathcal{L}(x^*, \lambda^*)d_k + o(\|d_k\|^2)
+    f(x_k)            & <\> f(x^*) + \epsilon_k \|d_k\|^2 + 0                                                                                \\
+    \epsilon_k\|d\|^2 & >\> f(x_k) - f(x^*) - \sum_{i\mathcal{A}(x^*)} \lambda^*_i c_i(x_k)                                                  \\
+                      & = \mathcal{L}(x_k, \lambda^*) - \mathcal{L}(x^*, \lambda^*)                                                          \\
+                      & = \nabla_x\mathcal{L}(x^*,\lambda^*)^T d_k + \frac{1}{2}d_k^T\nabla_x^2\mathcal{L}(x^*, \lambda^*)d_k + o(\|d_k\|^2) \\
+                      & = \frac{1}{2}d_k^T\nabla_x^2\mathcal{L}(x^*, \lambda^*)d_k + o(\|d_k\|^2)
 \end{align*}
 where first equality follows from $\sum \lambda_i^*c_i(x^*) = 0$ and the third from $\nabla_x\mathcal{L}(x^*,\lambda^*) = 0$, both of which are implied from the satisfaction of the KKT conditions.
-Now, dividing both sides by $\|d_k\|^2 / 2$ and sending $k\to\infty$ gives the following 
+Now, dividing both sides by $\|d_k\|^2 / 2$ and sending $k\to\infty$ gives the following
 \[
     d^T \nabla_x^2\mathcal{L}(x^*, \lambda^*) d \leq 0
 \]
 which violates \eqref{eq:positive-definite-hessian-of-lagrangian}.
 On the other hand we have
 \begin{align*}
-    \epsilon_k \|d_k\|^2 &> f(x_k) - f(x^*) = \nabla f(x^*)^Td_k + o(\|d_k\|),\\
-                       0 &\leq c_i(x_k) - c_i(x^*) = \nabla c_i(x^*)^T d_k + o(\|d_k\|), \quad i\in \mathcal{A}(x^*)\cap\mathcal{I}\\
-                       0 &= c_i(x_k) - c_i(x^*) = \nabla c_i(x^*)^T d_k + o(\|d_k\|), \quad i \in \mathcal{E}
+    \epsilon_k \|d_k\|^2 & > f(x_k) - f(x^*) = \nabla f(x^*)^Td_k + o(\|d_k\|),                                                      \\
+    0                    & \leq c_i(x_k) - c_i(x^*) = \nabla c_i(x^*)^T d_k + o(\|d_k\|), \quad i\in \mathcal{A}(x^*)\cap\mathcal{I} \\
+    0                    & = c_i(x_k) - c_i(x^*) = \nabla c_i(x^*)^T d_k + o(\|d_k\|), \quad i \in \mathcal{E}
 \end{align*}
 Dividing each equation above by $\|d_k\|$ and sending $k\to\infty$ yields,
 \[
@@ -114,37 +114,37 @@ We thus produced a vector $d$ in the critical cone violating \eqref{eq:positive-
 % We then see that this leads to a contradiction, that for all directions d in the critical cone, that implies that 
 % the hessian is 'negative definite' in that direction, leading to a contradiction. :) 
 \subsection{Solutions}
-The exercises chosen for this chapter are 12.1, 12.2, 12.4, 12.11, 12.13, 12.19 and 12.22. 
+The exercises chosen for this chapter are 12.1, 12.2, 12.4, 12.11, 12.13, 12.19 and 12.22.
 
 \subsubsection{Exercise 12.1}
 \begin{enumerate}
-\item[(a)]
-The feasible set is 
-\[
-    \Omega = \{x \in \mathbb{R} \mid c(x)=0\}
-\]
-The zeros of $c(x)$ are at $x = 0$ and at solutions of the equation $\sin\frac{1}{x} = 0$, which are $x_k = \frac{1}{k\pi}, \> k\in\mathbb{Z} \setminus \{0\}$.
-To show $c(x) \in C^2$, we compute the first and second derivatives. For $x \neq 0$:
-\begin{align*}
-    c'(x) &= 6x^5 \sin(1/x) - x^4 \cos(1/x)\\
-    c''(x) &= (30x^4-x^2)\sin(1/x) - 10x^3 \cos(1/x)
-\end{align*}
-As $x\to 0$, both $c'$ and $c''$ vanish, since $\sin, \cos$ remain bounded.
-Thus, both first and second derivatives have well defined values in the entire domain, $c \in C^2$.
+    \item[(a)]
+          The feasible set is
+          \[
+              \Omega = \{x \in \mathbb{R} \mid c(x)=0\}
+          \]
+          The zeros of $c(x)$ are at $x = 0$ and at solutions of the equation $\sin\frac{1}{x} = 0$, which are $x_k = \frac{1}{k\pi}, \> k\in\mathbb{Z} \setminus \{0\}$.
+          To show $c(x) \in C^2$, we compute the first and second derivatives. For $x \neq 0$:
+          \begin{align*}
+              c'(x)  & = 6x^5 \sin(1/x) - x^4 \cos(1/x)         \\
+              c''(x) & = (30x^4-x^2)\sin(1/x) - 10x^3 \cos(1/x)
+          \end{align*}
+          As $x\to 0$, both $c'$ and $c''$ vanish, since $\sin, \cos$ remain bounded.
+          Thus, both first and second derivatives have well defined values in the entire domain, $c \in C^2$.
 
-\item[(b)]
-Let $x_k = 1/(k\pi)$ for $k \in \mathbb{Z}, k \neq 0$. The distance to the next feasible point $x_{k+1}$ is
-\[
-|x_k - x_{k+1}| = \left|\frac{1}{k\pi} - \frac{1}{(k+1)\pi}\right| = \frac{1}{\pi|k(k+1)|}
-\]
-Choose a neighborhood $\mathcal{N}_k$ of $x_k$ with radius $r = \frac{1}{2\pi|k(k+1)|}$. This neighborhood contains no other feasible points. Since $x_k$ is the only feasible point in $\mathcal{N}_k$, it is a local solution. As it is the only local solution in $\mathcal{N}_k$, it is an isolated local solution.
+    \item[(b)]
+          Let $x_k = 1/(k\pi)$ for $k \in \mathbb{Z}, k \neq 0$. The distance to the next feasible point $x_{k+1}$ is
+          \[
+              |x_k - x_{k+1}| = \left|\frac{1}{k\pi} - \frac{1}{(k+1)\pi}\right| = \frac{1}{\pi|k(k+1)|}
+          \]
+          Choose a neighborhood $\mathcal{N}_k$ of $x_k$ with radius $r = \frac{1}{2\pi|k(k+1)|}$. This neighborhood contains no other feasible points. Since $x_k$ is the only feasible point in $\mathcal{N}_k$, it is a local solution. As it is the only local solution in $\mathcal{N}_k$, it is an isolated local solution.
 
-\item[(c)]
-The objective function is $f(x) = x^2$. We have $f(0)=0$ and $f(x_k) = 1/(k\pi)^2 > 0$ for all $k \neq 0$. 
-Since $f(0) < f(x_k)$ for all other feasible points $x_k$, $x=0$ is the global solution. 
-It is also a strict local solution because for any neighborhood of $0$, there are feasible points $x_k$ for large enough $|k|$, and for these points $f(x_k) > f(0)$.
-However, this also means that however small we choose our neighborhood around $0$, there will always be a $k$ large enough for other local solutions to exist within the neighborhood. 
-Therefore, $x=0$ is not an isolated local solution.
+    \item[(c)]
+          The objective function is $f(x) = x^2$. We have $f(0)=0$ and $f(x_k) = 1/(k\pi)^2 > 0$ for all $k \neq 0$.
+          Since $f(0) < f(x_k)$ for all other feasible points $x_k$, $x=0$ is the global solution.
+          It is also a strict local solution because for any neighborhood of $0$, there are feasible points $x_k$ for large enough $|k|$, and for these points $f(x_k) > f(0)$.
+          However, this also means that however small we choose our neighborhood around $0$, there will always be a $k$ large enough for other local solutions to exist within the neighborhood.
+          Therefore, $x=0$ is not an isolated local solution.
 \end{enumerate}
 \subsubsection{Exercise 12.2}
 An isolated solution is necessarily a strict local solution.
@@ -152,162 +152,162 @@ Recalling the
 \begin{Def}[Isolated local solution]
     A point $x^*$ is called an \textit{isolated local solution} if $x^*\in\Omega$ and there is a neighborhood $\mathcal{N}$ of $x^*$ such that $x^*$ is the only local solution in $\mathcal{N}\cap\Omega$.
 \end{Def}
-This means that if a point $x^*$ is an isolated local solution, then there exists a neighborhood $\mathcal{N}$ where, for all points $x$, the following holds 
+This means that if a point $x^*$ is an isolated local solution, then there exists a neighborhood $\mathcal{N}$ where, for all points $x$, the following holds
 \[
     f(x^*) < f(x), \quad x, x^* \in \mathcal{N}
 \]
-which is precisely the condition for a strict local solution. 
+which is precisely the condition for a strict local solution.
 It must be a strict inequality in the above condition since if equality held for some points in $\mathcal{N}$, they too would be local solutions, contradicting that $x^*$ was isolated.
 A strict local solution is however not necessarily isolated as we saw in 12.1. There, $x = 0$ was the global optimum which means that for all $x$ in the feasible domain the following holds $f(0) < f(x), \quad x\in\Omega$, i.e. it is strict.
 However, since there is no neighborhood where $x = 0$ is the only local solution, it cannot be isolated despite being strict.
 \subsubsection{Exercise 12.4}
 Just as in the proof of Theorem 2.5\footnote{Found on page 16 of the book.} we prove by contradiction.
-Assume $x$ is a local but not global solution. Then there must exist some $z$ for which $f(z) < f(x)$. 
-From the convexity of the feasible region, we can produce any convex combination of $x$ and $z$ and rest assured of its feasibility. 
+Assume $x$ is a local but not global solution. Then there must exist some $z$ for which $f(z) < f(x)$.
+From the convexity of the feasible region, we can produce any convex combination of $x$ and $z$ and rest assured of its feasibility.
 So, if we consider the line between $x$ and $z$, which must be contained in $\Omega$ by convexity, we have from the convexity of $f$
 \[
     f(\lambda z + (1 - \lambda)x) \leq \lambda f(z) + (1 - \lambda) f(x) < f(x)
 \]
 Thus, in an arbitrarily tiny neighborhood (radius $\lambda$) around $x$, there must exist points with a lower function value.
-This contradicts the assumption that $x$ is a local solution and it must thus hold that any solution which is a local solution must also be a global.\hfill\sq 
+This contradicts the assumption that $x$ is a local solution and it must thus hold that any solution which is a local solution must also be a global.\hfill\sq
 
 \subsubsection{Exercise 12.11}
 \begin{enumerate}
-\item[(a)] The feasible set is $\Omega = \{ x \in \mathbb{R}^2 \mid x_2 \ge 0, x_2 \le x_1^2 \}$.
-Let's define the constraint functions as $c_1(x) = x_2 \ge 0$ and $c_2(x) = x_1^2 - x_2 \ge 0$.
-The tangent cone $T_\Omega(x^*)$ is the set of all directions $d$ for which there exists a sequence of feasible points $\{z_k\} \subset \Omega$, $z_k \to x^*$ and a sequence of positive scalars $\{t_k\}$, $t_k \to 0^+$ as $k\to\infty$ such that:
-\[
-d = \lim_{k \to \infty} \frac{z_k - x^*}{t_k}
-\]
-Now, let $d = (d_1, d_2)$ be a vector in $T_\Omega(x^*)$, and let $z_k = (x_{1k}, x_{2k})$. We can then write the above as:
-\[
-    (d_1, d_2) = \lim_{k \to \infty} \left( \frac{x_{1k}}{t_k}, \frac{x_{2k}}{t_k} \right)
-\]
-Since each $z_k \in \Omega$, it must satisfy the constraints. 
-We use the constraints to furnish restrictions on the possible values of $d_1$ and $d_2$.
-Starting out with $c_1$, we divide it by $t_k > 0$ to get the following condition:
-\[
-    \frac{x_{2k}}{t_k} \ge 0 \overset{k\to\infty}{\implies} d_2 \ge 0
-\]
-Dividing $c_2$ by $t_k$ as well, we get
-\[
-    \frac{x_{2k}}{t_k} \le \frac{x_{1k}^2}{t_k}.
-\]
-where can rewrite the right-hand side as:
-\[
-    \frac{x_{2k}}{t_k} \le \left( \frac{x_{1k}}{t_k} \right) \cdot x_{1k}.
-\]
-Now, take the limit as $k \to \infty$. We know $\lim \frac{x_{2k}}{t_k} = d_2$, $\lim \frac{x_{1k}}{t_k} = d_1$, and $\lim x_{1k} = 0$ (since $z_k \to x^*$).
-\[
-    d_2 \le \left( \lim_{k \to \infty} \frac{x_{1k}}{t_k} \right) \cdot \left( \lim_{k \to \infty} x_{1k} \right)
-\]
-\[
-    d_2 \le d_1 \cdot 0
-\]
-\[
-    d_2 \le 0
-\]
-Combining $d_2 \ge 0$ and $d_2 \le 0$, we must have $d_2 = 0$. There is no restriction on $d_1$.
-Thus, finally, the tangent cone is
-\[
-    T_{\Omega}(x^*) = \left\{(d_1, 0) | d_1 \in \mathbb{R} \right\}.
-\]
-In the above, we have assumed that the tangent cone is not empty, in part \textbf{d)}, we show that is the case.
+    \item[(a)] The feasible set is $\Omega = \{ x \in \mathbb{R}^2 \mid x_2 \ge 0, x_2 \le x_1^2 \}$.
+          Let's define the constraint functions as $c_1(x) = x_2 \ge 0$ and $c_2(x) = x_1^2 - x_2 \ge 0$.
+          The tangent cone $T_\Omega(x^*)$ is the set of all directions $d$ for which there exists a sequence of feasible points $\{z_k\} \subset \Omega$, $z_k \to x^*$ and a sequence of positive scalars $\{t_k\}$, $t_k \to 0^+$ as $k\to\infty$ such that:
+          \[
+              d = \lim_{k \to \infty} \frac{z_k - x^*}{t_k}
+          \]
+          Now, let $d = (d_1, d_2)$ be a vector in $T_\Omega(x^*)$, and let $z_k = (x_{1k}, x_{2k})$. We can then write the above as:
+          \[
+              (d_1, d_2) = \lim_{k \to \infty} \left( \frac{x_{1k}}{t_k}, \frac{x_{2k}}{t_k} \right)
+          \]
+          Since each $z_k \in \Omega$, it must satisfy the constraints.
+          We use the constraints to furnish restrictions on the possible values of $d_1$ and $d_2$.
+          Starting out with $c_1$, we divide it by $t_k > 0$ to get the following condition:
+          \[
+              \frac{x_{2k}}{t_k} \ge 0 \overset{k\to\infty}{\implies} d_2 \ge 0
+          \]
+          Dividing $c_2$ by $t_k$ as well, we get
+          \[
+              \frac{x_{2k}}{t_k} \le \frac{x_{1k}^2}{t_k}.
+          \]
+          where can rewrite the right-hand side as:
+          \[
+              \frac{x_{2k}}{t_k} \le \left( \frac{x_{1k}}{t_k} \right) \cdot x_{1k}.
+          \]
+          Now, take the limit as $k \to \infty$. We know $\lim \frac{x_{2k}}{t_k} = d_2$, $\lim \frac{x_{1k}}{t_k} = d_1$, and $\lim x_{1k} = 0$ (since $z_k \to x^*$).
+          \[
+              d_2 \le \left( \lim_{k \to \infty} \frac{x_{1k}}{t_k} \right) \cdot \left( \lim_{k \to \infty} x_{1k} \right)
+          \]
+          \[
+              d_2 \le d_1 \cdot 0
+          \]
+          \[
+              d_2 \le 0
+          \]
+          Combining $d_2 \ge 0$ and $d_2 \le 0$, we must have $d_2 = 0$. There is no restriction on $d_1$.
+          Thus, finally, the tangent cone is
+          \[
+              T_{\Omega}(x^*) = \left\{(d_1, 0) | d_1 \in \mathbb{R} \right\}.
+          \]
+          In the above, we have assumed that the tangent cone is not empty, in part \textbf{d)}, we show that is the case.
 
-How about the set of first-order feasible directions, $\mathcal{F}$?
-The gradients of the constraint functions,  $c_1(x) = x_2$, $c_2(x) = x_1^2 - x_2$, are
-\begin{align*}
-    \nabla c_1(x^*) &= (0, 1)\\
-    \nabla c_2(x^*) &= (0, -1).
-\end{align*}
-The set of first-order feasible solutions is the set of directions $d$ (we only have inequality constraints in this case) for which the following conditions holds 
-\[
-    d^T \nabla c_i(x) \geq 0, \quad \forall i \in \mathcal{A}(x) \cap \mathcal{I}
-\]
-In order for $d^T\nabla c_i(x^*) \geq 0$ for both $i=0$ and $i=1$ we must have $d = (a, 0)^T$.
-Thus, $\mathcal{F}(x^*) = T_\Omega(x^*)$.  
-\item[(b)]
-LICQ are not satisfied since the gradients of the constraint functions are not linearly independent at $x^* = (0,0)^T$.
-There are no equality constraints, so we only need to check if there exists a vector such that $\nabla c_1(x^*)^T w > 0$, $\nabla c_2(x^*)^T w > 0$, since both constraints are active at $x^*$.
-The gradients were computed in (a), from where it is clear there exists no vector for which the inner product with both gradients is larger than 0.
-Thus, neither the MFCQ or the LICQ are satisfied.
-\begin{align*}
-    \nabla c_1(x^*) &= (0, 1)\\
-    \nabla c_2(x^*) &= (0, -1)
-\end{align*}
-with $c_1(x) = x_2$, $c_2(x) = x_1^2 - x_2$.
-\item[(c)]
-If the objective function is $f(x) = -x_2$ the Lagrangian is
-\begin{align*}
-    \mathcal{L}(x, \lambda) = -x_2 - \sum_{i\in\{1,2\}} \lambda_i c_i(x) =& -x_2 -\lambda_1 x_2 - \lambda_2(x_1^2 - x_2)\\
-    =& -\lambda_2x_1^2 + (\lambda_2 - \lambda_1 - 1)x_2
-\end{align*}
-So, (12.34a) becomes:
-\[
-    \nabla_x\mathcal{L}(x^*, \lambda^*) = \begin{pmatrix}
-        0\\
-        \lambda_2 - \lambda_1 - 1
-    \end{pmatrix} \overset{!}{=} 0
-\]
-Choosing Lagrange multipliers such that $\lambda_2 - \lambda_1 = 1$ satisfies the above condition. 
-Since the LICQ does not hold, $\lambda^*$ is not unique.
-For (12.34b) and (12.34c) we already know $x^*$ is feasible.  
-To satisfy (12.34d) we can pick $\lambda_1 = 1$, $\lambda_2 = 2$, for example.
-Lastly, (12.34e) is satisfied since both constraint functions are zero at $x^*$.
+          How about the set of first-order feasible directions, $\mathcal{F}$?
+          The gradients of the constraint functions,  $c_1(x) = x_2$, $c_2(x) = x_1^2 - x_2$, are
+          \begin{align*}
+              \nabla c_1(x^*) & = (0, 1)   \\
+              \nabla c_2(x^*) & = (0, -1).
+          \end{align*}
+          The set of first-order feasible solutions is the set of directions $d$ (we only have inequality constraints in this case) for which the following conditions holds
+          \[
+              d^T \nabla c_i(x) \geq 0, \quad \forall i \in \mathcal{A}(x) \cap \mathcal{I}
+          \]
+          In order for $d^T\nabla c_i(x^*) \geq 0$ for both $i=0$ and $i=1$ we must have $d = (a, 0)^T$.
+          Thus, $\mathcal{F}(x^*) = T_\Omega(x^*)$.
+    \item[(b)]
+          LICQ are not satisfied since the gradients of the constraint functions are not linearly independent at $x^* = (0,0)^T$.
+          There are no equality constraints, so we only need to check if there exists a vector such that $\nabla c_1(x^*)^T w > 0$, $\nabla c_2(x^*)^T w > 0$, since both constraints are active at $x^*$.
+          The gradients were computed in (a), from where it is clear there exists no vector for which the inner product with both gradients is larger than 0.
+          Thus, neither the MFCQ or the LICQ are satisfied.
+          \begin{align*}
+              \nabla c_1(x^*) & = (0, 1)  \\
+              \nabla c_2(x^*) & = (0, -1)
+          \end{align*}
+          with $c_1(x) = x_2$, $c_2(x) = x_1^2 - x_2$.
+    \item[(c)]
+          If the objective function is $f(x) = -x_2$ the Lagrangian is
+          \begin{align*}
+              \mathcal{L}(x, \lambda) = -x_2 - \sum_{i\in\{1,2\}} \lambda_i c_i(x) = & -x_2 -\lambda_1 x_2 - \lambda_2(x_1^2 - x_2)     \\
+              =                                                                      & -\lambda_2x_1^2 + (\lambda_2 - \lambda_1 - 1)x_2
+          \end{align*}
+          So, (12.34a) becomes:
+          \[
+              \nabla_x\mathcal{L}(x^*, \lambda^*) = \begin{pmatrix}
+                  0 \\
+                  \lambda_2 - \lambda_1 - 1
+              \end{pmatrix} \overset{!}{=} 0
+          \]
+          Choosing Lagrange multipliers such that $\lambda_2 - \lambda_1 = 1$ satisfies the above condition.
+          Since the LICQ does not hold, $\lambda^*$ is not unique.
+          For (12.34b) and (12.34c) we already know $x^*$ is feasible.
+          To satisfy (12.34d) we can pick $\lambda_1 = 1$, $\lambda_2 = 2$, for example.
+          Lastly, (12.34e) is satisfied since both constraint functions are zero at $x^*$.
 
-\item[(d)]
-\[
-    z_k = \begin{pmatrix}
-        t_k\\
-        t_k^2
-    \end{pmatrix}
-\]
-with $t_k = 1 / k$
+    \item[(d)]
+          \[
+              z_k = \begin{pmatrix}
+                  t_k \\
+                  t_k^2
+              \end{pmatrix}
+          \]
+          with $t_k = 1 / k$
 \end{enumerate}
 
 \subsubsection{12.13}
 
 Forming the contraint functions:
 \begin{align*}
-    c_1(x) &= 2 - (x_1 - 1)^2 - (x_2 - 1)^2\\
-    c_2(x) &= 2 - (x_1 - 1)^2 - (x_2 + 1)^2\\
-    c_3(x) &= x_1
+    c_1(x) & = 2 - (x_1 - 1)^2 - (x_2 - 1)^2 \\
+    c_2(x) & = 2 - (x_1 - 1)^2 - (x_2 + 1)^2 \\
+    c_3(x) & = x_1
 \end{align*}
 
 The gradients are
 \begin{align*}
-    \nabla c_1(x) =& \begin{pmatrix}
-        -2(x_1 - 1)\\
-        -2(x_2 - 1)
-    \end{pmatrix}\\
-    \nabla c_2(x) =& \begin{pmatrix}
-        -2(x_1 - 1)\\
-        -2(x_2 + 1)
-    \end{pmatrix}\\
-    \nabla c_3(x) =& \begin{pmatrix}
-        1\\0
-    \end{pmatrix}.
+    \nabla c_1(x) = & \begin{pmatrix}
+                          -2(x_1 - 1) \\
+                          -2(x_2 - 1)
+                      \end{pmatrix} \\
+    \nabla c_2(x) = & \begin{pmatrix}
+                          -2(x_1 - 1) \\
+                          -2(x_2 + 1)
+                      \end{pmatrix} \\
+    \nabla c_3(x) = & \begin{pmatrix}
+                          1 \\0
+                      \end{pmatrix}.
 \end{align*}
 At $x^* = (0,0)$ we have
 \begin{align*}
-    \nabla c_1(x^*) =& \begin{pmatrix}
-        2\\
-        2
-    \end{pmatrix}\\
-    \nabla c_2(x^*) =& \begin{pmatrix}
-        2\\
-        -2
-    \end{pmatrix}\\
-    \nabla c_3(x^*) =& \begin{pmatrix}
-        1\\0
-    \end{pmatrix}
+    \nabla c_1(x^*) = & \begin{pmatrix}
+                            2 \\
+                            2
+                        \end{pmatrix} \\
+    \nabla c_2(x^*) = & \begin{pmatrix}
+                            2 \\
+                            -2
+                        \end{pmatrix} \\
+    \nabla c_3(x^*) = & \begin{pmatrix}
+                            1 \\0
+                        \end{pmatrix}
 \end{align*}
 We have three active constraints, thus LICQ cannot hold.
 However, taking the inner product between the gradients and the vector $w = (1, 0)^T$ yields a positive value for all gradients, thus the MFCQ holds.
 \subsubsection{12.19}
 
 \subsubsection{Exercise 12.22}
-We begin by making explicit the implications of the properties of $c_i(x), i\in\mathcal{E}$ being linear and $-c_i(x), i\in\mathcal{I}$ being convex. 
+We begin by making explicit the implications of the properties of $c_i(x), i\in\mathcal{E}$ being linear and $-c_i(x), i\in\mathcal{I}$ being convex.
 The defining property of a linear function is the following
 \[
     f(ax + by) = af(x) + bf(y)
@@ -326,8 +326,8 @@ That is,
 \]
 To show this holds, we need to show $z$ is feasible.
 \begin{align*}
-    c_i(z) &= 0,\quad i\in\mathcal{E}\\
-    c_j(z) &\geq 0, \quad i\in\mathcal{I}    
+    c_i(z) & = 0,\quad i\in\mathcal{E}     \\
+    c_j(z) & \geq 0, \quad i\in\mathcal{I}
 \end{align*}
 Starting with the equality constraints
 \begin{align*}

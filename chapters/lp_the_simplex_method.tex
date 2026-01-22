@@ -4,39 +4,73 @@ Questions that came up during the book club session:
 \begin{enumerate}
     \item Does convexity of a problem imply that the KKT conditions are sufficient?
           Yes, it does.
-          We begin with a useful 
+          We begin with a useful definition.
           \begin{Def}[Convex problem]
-            Given the functions $c_i, i \in \mathcal{I}$, $c_j, j \in \mathcal{E}$ and $f$, in the problem \eqref{eq:constrained-problem}, we say that the optimization problem is \textit{convex} if\footnote{
-                This definition would be less awkward had the feasibility condition been the more conventional $c_i(x) \leq 0$. It would then define $c_i$ to be convex instead of concave.
-            }
-            \begin{align*}
-                &\text{All }c_i\text{ are concave.}\quad \implies \quad \nabla c_i(x)^T(y - x) \geq c_i(y) - c_i(x)\\
-                &\text{All }c_j\text{ are affine.}\quad \implies \quad \nabla c_j(x)^T(y - x) = c_j(y) - c_j(x)\\
-                &f\text{ is convex.}\quad \implies \quad \nabla f(x)^T(y - x) \leq f(y) - f(x)
-            \end{align*}
-            \label{def:convex-problem}
-          \end{Def} 
+              Given the functions $c_i, i \in \mathcal{I}$, $c_j, j \in \mathcal{E}$ and $f$, in the problem \eqref{eq:constrained-problem}, we say that the optimization problem is \textit{convex} if\footnote{
+                  This definition would be less awkward had the feasibility condition been the more conventional $c_i(x) \leq 0$. It would then define $c_i$ to be convex instead of concave.
+              }
+              \begin{align*}
+                   & \text{All }c_i\text{ are concave.}\quad \implies \quad \nabla c_i(x)^T(y - x) \geq c_i(y) - c_i(x) \\
+                   & \text{All }c_j\text{ are affine.}\quad \implies \quad \nabla c_j(x)^T(y - x) = c_j(y) - c_j(x)     \\
+                   & f\text{ is convex.}\quad \implies \quad \nabla f(x)^T(y - x) \leq f(y) - f(x)
+              \end{align*}
+              \label{def:convex-problem}
+          \end{Def}
 
           \begin{Thm}[Sufficiency of KKT for convex problems]
-            Given the problem \eqref{eq:constrained-problem}, and a point $x^*\in\Omega$ for which the KKT conditions are sastified for some $\lambda^*$.
-            If the problem is convex as defined in definition \ref{def:convex-problem}, then $x^*$ is a global minimizer.
+              Given the problem \eqref{eq:constrained-problem}, and a point $x^*\in\Omega$ for which the KKT conditions are satisfied for some $\lambda^*$.
+              If the problem is convex as defined in definition \ref{def:convex-problem}, then $x^*$ is a global minimizer.
           \end{Thm}
           \textit{Proof} Pick any $x\in\Omega$.
-          From the definition \ref{def:convex-problem}, we have for the constraints that
+          From the definition \ref{def:convex-problem}, we have for the active constraints that
           \begin{align*}
-            \nabla c_i(x^*)^T(x - x^*) &\geq c_i(x) - c_i(x^*) = c_i(x) \geq 0\\
-            \nabla c_j(x^*)^T(x - x^*) &= c_j(x) - c_j(x^*) = 0\\
+              \nabla c_i(x^*)^T(x - x^*) & \geq c_i(x) - c_i(x^*) = c_i(x) \geq 0 \\
+              \nabla c_j(x^*)^T(x - x^*) & = c_j(x) - c_j(x^*) = 0                \\
           \end{align*}
-          Then, by inspecting convexity condition on the objective function we obtain
+          Then, by inspecting the convexity condition on the objective function we obtain
           \begin{align*}
-            f(x) - f(x^*) \geq \nabla f(x^*)^T(x - x^*) = \sum_{i\in\mathcal{A}(x^*)} \lambda_i \nabla c_i (x - x^*)  \geq 0
+              f(x) - f(x^*) \geq \nabla f(x^*)^T(x - x^*) = \sum_{i\in\mathcal{A}(x^*)} \lambda_i \nabla c_i (x^*)^T (x - x^*)  \geq 0
           \end{align*}
-          Thus, $f(x) \geq f(x^*)$ for any $x \in \Omega$\hfill\sq. 
+          Thus, $f(x) \geq f(x^*)$ for any $x \in \Omega$. \hfill$\blacksquare$
     \item Can we formulate some more compelling, detailed version of the proof of part (ii) of the strong duality theorem?
+          It turns out we can, and it is based on the basic logical relation, that $A \implies B \iff \lnot B \implies \lnot A$.
+          An example in words could be ''\textit{A number divisible by four is even implies that no odd number is divisible by four}''.
+          Recalling the weak duality theorem,
+          \begin{Thm}[Weak Duality]
+              If $x$ is a primal feasible point and $\lambda$ is a dual feasible point, then
+              \[
+                  b^T\lambda \leq c^T x
+              \]
+          \end{Thm}
+          we now state the second part of the strong duality theorem,
+          \begin{Thm}[Strong Duality II \cite{mangasarian1994nonlinear}]
+              If the primal problem is unbounded, the dual problem is infeasible.
+              Conversely, if the dual problem is unbounded, the primal is infeasible.
+          \end{Thm}
+          \textit{Proof}
+          The statement
+          $$
+              \text{The primal is unbounded } \implies \text{ The dual is infeasible}
+          $$
+          is equivalent to
+          $$
+              \text{The dual is feasible } \implies \text{ The primal is bounded}.
+          $$
+          So, to show that unboundedness of the dual implies that the primal is infeasible, $\Omega = \emptyset$, it suffices to show that feasibility of the dual implies that the primal is bounded, which follows from the weak duality theorem.
+          Every dual feasible point $\lambda$ provides a lower bound for the primal optimal objective via
+          $$
+              b^T\lambda \leq c^T x, \quad \forall \> x\in X
+          $$
+          A symmetric argument can be made for the case
+          $$
+              \text{The dual is unbounded } \implies \text{ The primal is infeasible}
+          $$
+          \hfill$\blacksquare$
+
 \end{enumerate}
 
 \subsection{Solutions}
-The exercises chosen for this chapter are 13.1, 
+The exercises chosen for this chapter are 13.1,
 \subsubsection{13.1}
 To convert this problem to standard form we need to do the following
 \begin{itemize}
@@ -51,75 +85,75 @@ The first point is self-explanatory.
 For the second point we begin by splitting the bound on $y$ into two separate constraints
 \[
     l \leq y \leq u \to \begin{array}{l}
-         y \leq u\\
-         y \geq l
+        y \leq u \\
+        y \geq l
     \end{array}
 \]
 So the full set of constraints are
 \begin{align*}
-    A_1 x &= b_1\\
-    A_2 x + B_2 y  &\leq b_2\\
-    y &\leq u\\
-    y &\geq l
+    A_1 x         & = b_1    \\
+    A_2 x + B_2 y & \leq b_2 \\
+    y             & \leq u   \\
+    y             & \geq l
 \end{align*}
 Adding slack (and \textit{surplus} for the lower bounds) variables yields the following picture
 \begin{align*}
-    A_1 x &= b_1\\
-    A_2 x + B_2 y + s_1 &= b_2\\
-    y + s_2 &= u\\
-    y - s_3 &= 1\\
-    s_1, s_2, s_3 &\geq 0
+    A_1 x               & = b_1  \\
+    A_2 x + B_2 y + s_1 & = b_2  \\
+    y + s_2             & = u    \\
+    y - s_3             & = l    \\
+    s_1, s_2, s_3       & \geq 0
 \end{align*}
-Finally, we split the currently unbounded variables $x$ and $y$ into negative and positive parts as $x \to x^+ - x^-$ with $x^+, x^-\in \mathbb{R}^+$ and similarily for $y$.
+Finally, we split the currently unbounded variables $x$ and $y$ into negative and positive parts as $x \to x^+ - x^-$ with $x^+, x^-\in \mathbb{R}^+$ and similarly for $y$.
 This gives the final problem
 \[
     \operatorname{min} -c^T\left(x^+ - x^-\right) - d^T\left(y^+ - y^-\right)
 \]
 subject to
 \begin{align*}
-    A_1 \left(x^+ - x^-\right) &= b_1\\
-    A_2 \left(x^+ - x^-\right) + B_2 \left(y^+ - y^-\right) + s_1 &= b_2\\
-    \left(y^+ - y^-\right) + s_2 &= u\\
-    \left(y^+ - y^-\right) - s_3 &= l\\
-    x^+, x^-, y^+, y^-, s_1, s_2, s_3 &\geq 0.
+    A_1 \left(x^+ - x^-\right)                                    & = b_1   \\
+    A_2 \left(x^+ - x^-\right) + B_2 \left(y^+ - y^-\right) + s_1 & = b_2   \\
+    \left(y^+ - y^-\right) + s_2                                  & = u     \\
+    \left(y^+ - y^-\right) - s_3                                  & = l     \\
+    x^+, x^-, y^+, y^-, s_1, s_2, s_3                             & \geq 0.
 \end{align*}
-One can formulate the equality constraints as equation by constructing a large matrix out of the different blocks above:
+One can formulate the equality constraints as a single matrix equation by constructing a large matrix out of the different blocks above:
 \[
     \begin{pmatrix}
-        A_1 & -A_1 & 0 & 0 & 0 & 0 & 0\\
-        A_2 & -A_2 & B_2 & -B_2 & \mathbbm{1} & 0 & 0\\
-        0 & 0 & \mathbbm{1} & -\mathbbm{1} & 0 & \mathbbm{1} & 0\\
-        0 & 0 & \mathbbm{1} & -\mathbbm{1} & 0 & 0 & -\mathbbm{1}\\
+        A_1 & -A_1 & 0   & 0    & 0 & 0 & 0  \\
+        A_2 & -A_2 & B_2 & -B_2 & I & 0 & 0  \\
+        0   & 0    & I   & -I   & 0 & I & 0  \\
+        0   & 0    & I   & -I   & 0 & 0 & -I \\
     \end{pmatrix}\begin{pmatrix}
-        x^+\\
-        x^-\\
-        y^+\\
-        y^-\\
-        s_1\\
-        s_2\\
+        x^+ \\
+        x^- \\
+        y^+ \\
+        y^- \\
+        s_1 \\
+        s_2 \\
         s_3
-    \end{pmatrix} = 
+    \end{pmatrix} =
     \begin{pmatrix}
-        b_1\\
-        b_2\\
-        u\\
+        b_1 \\
+        b_2 \\
+        u   \\
         l
     \end{pmatrix}
 \]
 \subsubsection{13.2}
-Verify that the dual of 
+Verify that the dual of
 \[
     \operatorname{max} b^T\lambda, \quad \text{subject to } A^T\lambda \leq c
 \]
-is the primal. 
+is the primal.
 Recall that the dual problem is:
 \[
     \underset{\lambda \geq 0}{\operatorname{max}} \> \underset{x}{\operatorname{min}} \> \mathcal{L}(x, \lambda)
 \]
-The Lagrangian is, in this case (not the order of the variables)
+The Lagrangian is, in this case (note the order of the variables and the negation of $b^T\lambda$)
 \begin{align*}
-    \mathcal{L}(\lambda, x) &= -b^T\lambda - x^T(c - A^T\lambda)\\
-                            &= (x^T A^T - b^T)\lambda - x^T c.
+    \mathcal{L}(\lambda, x) & = -b^T\lambda - x^T(c - A^T\lambda) \\
+                            & = (x^T A^T - b^T)\lambda - x^T c.
 \end{align*}
 The dual of this problem is then
 \[

@@ -4,239 +4,239 @@ The concept of a local minimizer is introduced,
     A point $x^*$ is a \textit{weak local minimizer} if there is a neighborhood
     % ------------------- Footnote ---------------------
     \footnote{
-        A neighborhood of a point $x$, sometimes denoted $\mathcal{N}_x$ is an open set containing $x$. 
-        Defining which subsets of are considered open is the act of choosing a topology for your space. 
-        In this book they use the topology induced on $\mathbb{R}^n$ by the euclidean metric $\left( \| \cdot\|_2\right) : x \mapsto \sqrt{x^Tx}$. 
+        A neighborhood of a point $x$, sometimes denoted $\mathcal{N}_x$ is an open set containing $x$.
+        Defining which subsets of are considered open is the act of choosing a topology for your space.
+        In this book they use the topology induced on $\mathbb{R}^n$ by the euclidean metric $\left( \| \cdot\|_2\right) : x \mapsto \sqrt{x^Tx}$.
         For more on Euclidean topology, see \href{https://en.wikipedia.org/wiki/Real_coordinate_space\#Topological_properties}{\textcolor{blue}{here}}.
-} 
-% -------------------------------------------------------
-$\mathcal{N}$ of $x^*$ such that $f\left(x^*\right) \leq f(x), \quad\forall x\in\mathcal{N}$. 
+    }
+    % -------------------------------------------------------
+    $\mathcal{N}$ of $x^*$ such that $f\left(x^*\right) \leq f(x), \quad\forall x\in\mathcal{N}$.
 \end{Def}
 On the other hand a \textit{strict} local optimizer is where the inequality above is strict.
 A local minimizer $x^*$ is called \textit{isolated} if there exists a neighborhood in which $x^*$ is the only local minimizer.
-Sufficient conditions for a point to be a local minimizer were presented as the following 
+Sufficient conditions for a point to be a local minimizer were presented as the following
 \begin{Thm}[Second-Order Sufficient Conditions]
     Suppose that $\nabla^2f$ is continuous in an open neighborhood of $x^*$ and that $\nabla f(x^*) = 0$ and $\nabla^2f(x^*)$ is positive definite. Then $x^*$ is a strict local minimizer of $f$
 \end{Thm}
 \subsection{Questions}
 \begin{enumerate}[label = \roman*)]
-\item \textit{Do we use any of these?} Vplot has some unconstrained, least-squares algorithm.
-\item \textit{What have you discussed previously on the topic of smooth optimization?} Interior point methods for optimizing SIMM delta.
-\item \textit{How is the process of inverting a matrix affected by terrible condition number?} Which algorithms are used for matrix inversion? Is there some bound on iterations dependent on the condition number?
+    \item \textit{Do we use any of these?} Vplot has some unconstrained, least-squares algorithm.
+    \item \textit{What have you discussed previously on the topic of smooth optimization?} Interior point methods for optimizing SIMM delta.
+    \item \textit{How is the process of inverting a matrix affected by terrible condition number?} Which algorithms are used for matrix inversion? Is there some bound on iterations dependent on the condition number?
 \end{enumerate}
 \subsection{Solutions}
 The exercises chosen for this chapter are 2.1, 2.3, 2.10, 2.11 and 2.12.
 \subsubsection{Exercise 2.1}
 Compute i) the gradient and ii) the Hessian of the Rosenbrock
 \footnote{
-    There are higher dimensional \href{https://en.wikipedia.org/wiki/Rosenbrock_function\#Multidimensional_generalizations}{\textcolor{blue}{generalizations}} of the Rosenbrock function which are classic problems to benchmark performance on $n$-dimensional, non-convex probelms. 
+    There are higher dimensional \href{https://en.wikipedia.org/wiki/Rosenbrock_function\#Multidimensional_generalizations}{\textcolor{blue}{generalizations}} of the Rosenbrock function which are classic problems to benchmark performance on $n$-dimensional, non-convex probelms.
 } function
 \[
-f(x) = 100(x_2 - x_1^2)^2 + (1-x_1)^2
+    f(x) = 100(x_2 - x_1^2)^2 + (1-x_1)^2
 \]
 and iii) show that $x^* = (1,1)$ is the only local minimizer.
 \begin{enumerate}[label = \roman*)]
     \item The gradient of a function is the vector of all its partial derivatives \[
-        \nabla f (x) =\left(\pd[][f][x_1], \pd[][f][x_2]\right)^T.
-    \]
-    Computing the two derivatives in $x_1$ and $x_2$ we get
-    \begin{align*}
-        \pd[][f][x_1] &= -400(x_2 - x_1^2)x_1 - 2(1-x_1)\\
-        \pd[][f][x_2] &= 200(x_2-x_1^2)
-    \end{align*}
+              \nabla f (x) =\left(\pd[][f][x_1], \pd[][f][x_2]\right)^T.
+          \]
+          Computing the two derivatives in $x_1$ and $x_2$ we get
+          \begin{align*}
+              \pd[][f][x_1] & = -400(x_2 - x_1^2)x_1 - 2(1-x_1) \\
+              \pd[][f][x_2] & = 200(x_2-x_1^2)
+          \end{align*}
     \item The Hessian of a function is the matrix of all it's partial derivatives
-    \[
-    \textbf{H}_f = \left(\nabla^2 f\right)_{ij} = \pd[2][f][x_i,x_j] 
-    \]
-    As a mnemonic, $\nabla = \left(\pd[][][x_1], \dots, \pd[][][x_2]\right)$ and $\nabla^2 = \nabla\nabla^T$.
-    \begin{align*}
-        \pd[2][f][x_1] &= -400\left(x_2 - 3x_1^3\right) + 2\\
-        \pd[2][f][x_1,x_2] = \pd[2][f][x_2,x_1] &= -400x_1\\
-        \pd[2][f][x_2] &= 200 
-    \end{align*}
+          \[
+              \textbf{H}_f = \left(\nabla^2 f\right)_{ij} = \pd[2][f][x_i,x_j]
+          \]
+          As a mnemonic, $\nabla = \left(\pd[][][x_1], \dots, \pd[][][x_2]\right)$ and $\nabla^2 = \nabla\nabla^T$.
+          \begin{align*}
+              \pd[2][f][x_1]                          & = -400\left(x_2 - 3x_1^3\right) + 2 \\
+              \pd[2][f][x_1,x_2] = \pd[2][f][x_2,x_1] & = -400x_1                           \\
+              \pd[2][f][x_2]                          & = 200
+          \end{align*}
     \item For a local minimizer, $\nabla f = 0$ and $\nabla^2f$ is positive definite.
-    The first condition means to solve for which $x_1, x_2$ the equations
-    \[
-    \pd[][f][x_1] = 0, \quad \pd[][f][x_2] = 0
-    \]
-    hold.
-    The second one is the easiest to start with, it implies the relation $x_2 = x_1^2$ for stationary points (a point for which $\nabla f(x) = 0$ is true) of $f$.
-    Substituting into the former of the equations above we get
-    \[
-    2(1 - x_1) = 0 \implies x_1 = 1
-    \]
-    which in turn means $x_2 = 1$.
-    This means there is only one stationary point and thus, at most one local minimizer.
-    Only if the Hessian is positive definite can the stationary point be a local minimizer. Let's check!
-    \[
-    \nabla^2f(1,1) = 
-    \begin{pmatrix}
-        802 & -400\\
-        -400 & 200
-    \end{pmatrix}
-    \]
-    A symmetric matrix is positive definite if all it's leading principal minors are positive\footnote{S] \href{https://en.wikipedia.org/wiki/Sylvester\%27s_criterion}{\textcolor{blue}{Sylvester's criterion}}}. The principal minors are the determinants of square sub-matrices starting from the upper left corner. 
-    The first one is the 1 \by 1 matrix in the top left corner, i.e. $802>0$.
-    The second one is 
-    \[
-    \operatorname{det}\nabla^2 f(1,1) = 802\cdot200 - 400^2 = 400 > 0
-    \]
-    \hfill\sq
+          The first condition means to solve for which $x_1, x_2$ the equations
+          \[
+              \pd[][f][x_1] = 0, \quad \pd[][f][x_2] = 0
+          \]
+          hold.
+          The second one is the easiest to start with, it implies the relation $x_2 = x_1^2$ for stationary points (a point for which $\nabla f(x) = 0$ is true) of $f$.
+          Substituting into the former of the equations above we get
+          \[
+              2(1 - x_1) = 0 \implies x_1 = 1
+          \]
+          which in turn means $x_2 = 1$.
+          This means there is only one stationary point and thus, at most one local minimizer.
+          Only if the Hessian is positive definite can the stationary point be a local minimizer. Let's check!
+          \[
+              \nabla^2f(1,1) =
+              \begin{pmatrix}
+                  802  & -400 \\
+                  -400 & 200
+              \end{pmatrix}
+          \]
+          A symmetric matrix is positive definite if all it's leading principal minors are positive\footnote{S] \href{https://en.wikipedia.org/wiki/Sylvester\%27s_criterion}{\textcolor{blue}{Sylvester's criterion}}}. The principal minors are the determinants of square sub-matrices starting from the upper left corner.
+          The first one is the 1 \by 1 matrix in the top left corner, i.e. $802>0$.
+          The second one is
+          \[
+              \operatorname{det}\nabla^2 f(1,1) = 802\cdot200 - 400^2 = 400 > 0
+          \]
+          \hfill\sq
 \end{enumerate}
 \subsubsection{Exercise 2.3}
 Starting with $f_1$,
 \[
     \pd[][f_1][x_i]  = \pd[][a^Tx][x_i] = \pd[][][x_i]\sum_i a_ix_i = a_i.
-\] 
-So $\nabla f_1 = a\in\mathbb{R}^n$. 
+\]
+So $\nabla f_1 = a\in\mathbb{R}^n$.
 Since the gradient is constant and the Hessian consists of second derivatives, it is zero $\nabla^2f_1 = \mathbf0$.
 
 For $f_2$ we have
 \begin{align*}
-\pd[][f_2][x_k]  &= \sum_{i,j} A_{ij}\pd[][(x_ix_j)][x_k]  \\ &=\sum_{i,j}A_{ij}(\delta_{ik}x_j + x_i\delta_{jk}) \\
-&=\sum_{j}A_{kj}x_j + \sum_i A_{ik}x_i \\
-&=2A_kx
+    \pd[][f_2][x_k] & = \sum_{i,j} A_{ij}\pd[][(x_ix_j)][x_k] \\ &=\sum_{i,j}A_{ij}(\delta_{ik}x_j + x_i\delta_{jk}) \\
+                    & =\sum_{j}A_{kj}x_j + \sum_i A_{ik}x_i   \\
+                    & =2A_kx
 \end{align*}
-where $A_k$ is the $k^{\text{th}}$ column of $A$ and $\delta_{ij}$ is the Kronecker delta\footnote{S] \href{https://en.wikipedia.org/wiki/Kronecker_delta}{\textcolor{blue}{Kronecker delta}}}. 
+where $A_k$ is the $k^{\text{th}}$ column of $A$ and $\delta_{ij}$ is the Kronecker delta\footnote{S] \href{https://en.wikipedia.org/wiki/Kronecker_delta}{\textcolor{blue}{Kronecker delta}}}.
 The last inequality follows from $A$ being symmetric.
 Thus
 \[
-\nabla f_2 = (2A_1x,\dots,2A_nx)^T = 2 A x.
+    \nabla f_2 = (2A_1x,\dots,2A_nx)^T = 2 A x.
 \]
 For the Hessian, we need
 \[
-\pd[2][f_2][x_lx_k] = \pd[][][x_l]\left(2\sum_iA_{ik}x_i\right) = 2A_{lk}.
+    \pd[2][f_2][x_lx_k] = \pd[][][x_l]\left(2\sum_iA_{ik}x_i\right) = 2A_{lk}.
 \]
 which gives
 \[
-\nabla^2f_2 = 2A
+    \nabla^2f_2 = 2A
 \]
 \subsubsection{Exercise 2.10}
 \[
-\pd[][\tilde{f}][z_i] = \sum_k\pd[][f][x_k]\pd[][x_k][z_i]
+    \pd[][\tilde{f}][z_i] = \sum_k\pd[][f][x_k]\pd[][x_k][z_i]
 \]
 To begin with, we compute the second factor in the sum above
 \[
-\pd[][x_k][z_i] = \pd[][][z_i]\left( \sum_jS_{kj}z_j + s_k\right) = S_{ki}.
+    \pd[][x_k][z_i] = \pd[][][z_i]\left( \sum_jS_{kj}z_j + s_k\right) = S_{ki}.
 \]
 Substituting this for $\pd[][x_k][z_i]$ in the first equation we get
 \[
-\pd[][\tilde{f}][z_i] = \sum_k \pd[][f][x_k] S_{ki} = S_i^T \cdot \nabla f
+    \pd[][\tilde{f}][z_i] = \sum_k \pd[][f][x_k] S_{ki} = S_i^T \cdot \nabla f
 \]
 with $S_i$ being the $i^{\text{th}}$ column of $S$.
 This means\footnote{If $S_i$ had been rows, we would have had $\nabla \tilde{f}(z) = S\nabla f(x)$}
 \[
-\nabla \tilde{f}(z) = \begin{bmatrix}
-    S_1 \nabla f\\
-    \vdots\\
-    S_n \nabla f
-\end{bmatrix} = S^T\nabla f(x)
+    \nabla \tilde{f}(z) = \begin{bmatrix}
+        S_1 \nabla f \\
+        \vdots       \\
+        S_n \nabla f
+    \end{bmatrix} = S^T\nabla f(x)
 \]
 For the Hessian, we need
 \[
-\pd[2][f][z_i,z_j] = \sum_{k,l}\pd[2][f][x_k,x_l]\pd[][x_k][z_i]\pd[][x_l][z_j] = \sum_{k,l} \pd[2][f][x_k,x_l]S_{ki}S_{lj}
+    \pd[2][f][z_i,z_j] = \sum_{k,l}\pd[2][f][x_k,x_l]\pd[][x_k][z_i]\pd[][x_l][z_j] = \sum_{k,l} \pd[2][f][x_k,x_l]S_{ki}S_{lj}
 \]
 Note that we could have hade second derivatives of $x$ w.r.t. $z$, but thankfully the first derivative is constant so we are off the hook!
 The expression above can be rewritten as:
 \[
-\pd[2][f][z_i,z_j] = S_i^T \cdot \nabla^2 f \cdot  S_j
+    \pd[2][f][z_i,z_j] = S_i^T \cdot \nabla^2 f \cdot  S_j
 \]
 So when assembling the whole Hessian matrix from the partial derivatives, we obtain
 \[
-\nabla^2 \tilde{f}(z) = S^T \nabla^2 f(x) S
+    \nabla^2 \tilde{f}(z) = S^T \nabla^2 f(x) S
 \]
-\hfill\sq 
+\hfill\sq
 \subsubsection{Exercise 2.11}
-Assuming a unit step size, the relation between subsequent steps is 
+Assuming a unit step size, the relation between subsequent steps is
 \[
-x_{k+1} = x_k + p
+    x_{k+1} = x_k + p
 \]
 We use this relation to make sure the affine relation between the iterates is preserved using this update rule.
 To begin with, the relation between the iterates $z_k$ and $x_k$ is
 \[
-x_k = Sz_k + s.
+    x_k = Sz_k + s.
 \]
 The step direction at each iteration is computed as
 \[
-p_k = -B_k^{-1}\nabla f(x_k)
+    p_k = -B_k^{-1}\nabla f(x_k)
 \]
-and 
+and
 \[
-\tilde{p}_k = -\tilde{B}_k^{-1}\nabla \tilde{f}(z_k)
+    \tilde{p}_k = -\tilde{B}_k^{-1}\nabla \tilde{f}(z_k)
 \]
 Given that the initial Hessians approximations are chosen such that $\tilde{B}_0 = S^TB_0S$ we can see that
 \[
-\tilde{p}_0 =  -(S^TB_0S)^{-1}S^T\nabla f(x_0) = -S^{-1}B_0^{-1}\nabla f(x_0)
+    \tilde{p}_0 =  -(S^TB_0S)^{-1}S^T\nabla f(x_0) = -S^{-1}B_0^{-1}\nabla f(x_0)
 \]
 which, for $z_{k+1}$, means
 \begin{align*}
-z_{k+1} =& z_k + \tilde{p_k} = z_k - S^{-1}B_k^{-1}\nabla f(x_k)\\
-=& (S^{-1}(x_k - s)) - S^{-1}B_k^{-1}\nabla f(x_k)
+    z_{k+1} = & z_k + \tilde{p_k} = z_k - S^{-1}B_k^{-1}\nabla f(x_k) \\
+    =         & (S^{-1}(x_k - s)) - S^{-1}B_k^{-1}\nabla f(x_k)
 \end{align*}
 Applying the affine transformation $v \mapsto Sv +s$ on both sides
 \[
-\underbrace{x_k + B_{k}^{-1}\nabla f(x_k)}_{x_{k+1}} = Sz_{k+1} + s
+    \underbrace{x_k + B_{k}^{-1}\nabla f(x_k)}_{x_{k+1}} = Sz_{k+1} + s
 \]
-So, given $\tilde{B}_k = S^TB_kS$, the above holds. 
+So, given $\tilde{B}_k = S^TB_kS$, the above holds.
 Since we can choose the initial approximations such that this holds, it remains to verify that the rank one and BFGS update rules preserve this relationship.
-We begin with the rank-one update. 
+We begin with the rank-one update.
 \[
-B_{k+1} \;=\; B_k \;+\; 
-\frac{(y_k - B_k s_k)(y_k - B_k s_k)^{T}}
-     {(y_k - B_k s_k)^{T} s_k}
+    B_{k+1} \;=\; B_k \;+\;
+    \frac{(y_k - B_k s_k)(y_k - B_k s_k)^{T}}
+    {(y_k - B_k s_k)^{T} s_k}
 \]
 where
 \[
-s_k \;=\; x_{k+1} - x_k, 
-\qquad 
-y_k \;=\; \nabla f(x_{k+1}) - \nabla f(x_k).
+    s_k \;=\; x_{k+1} - x_k,
+    \qquad
+    y_k \;=\; \nabla f(x_{k+1}) - \nabla f(x_k).
 \]
 We know that for $k=0$, we have $x_k = Sz_k +s$ and $\tilde{B}_0 = S^TB_0S$.
 If this update preserves the relation between the Hessian iterates, then the relation between the solution iterates will be preserved and continue to hold through further iterations.
 The quantities $y_k$ and $s_k$ relate to their $\tilde{}$ counterparts as follows:
 \[
-\tilde{s}_k \;=\; z_{k+1} - z_k = S^{-1}(x_{k+1} -x_k) = S^{-1}s_k, 
-\qquad 
-\tilde{y}_k \;=\; \nabla f(z_{k+1}) - \nabla f(z_k) = S^Ty_k.
+    \tilde{s}_k \;=\; z_{k+1} - z_k = S^{-1}(x_{k+1} -x_k) = S^{-1}s_k,
+    \qquad
+    \tilde{y}_k \;=\; \nabla f(z_{k+1}) - \nabla f(z_k) = S^Ty_k.
 \]
 We now show the update satisfies behaves desirably by substituting in the above relations,
 \begin{align*}
-    \tilde{B}_{k+1} &= \tilde{B}_k + \frac{(\tilde{y}_k - \tilde{B}_k \tilde{s}_k)(\tilde{y}_k - \tilde{B}_k \tilde{s}_k)^{T}}
-     {(\tilde{y}_k - \tilde{B}_k \tilde{s}_k)^{T} \tilde{s}_k}\\
-     &= S^TB_kS + \frac{(S^Ty_k - S^T B_k S S^{-1} s_k)(S^Ty_k - S^TB_kS S^{-1} s_k)^{T}}
-     {(S^Ty_k - S^TB_kSS^{-1} s_k)^{T} S^{-1} s_k}\\
-     &= S^TB_kS + \frac{S^T(y_k -  B_k s_k)(y_k - B_ks_k)^{T}S}
-     {(y_k - B_k s_k)^{T} S S^{-1} s_k} \\
-     &= S^T\underbrace{\left(B_k + \frac{(y_k -  B_k s_k)(y_k - B_ks_k)^{T}}
-     {(y_k - B_k s_k)^{T}  s_k}\right)}_{B_{k+1}}S
+    \tilde{B}_{k+1} & = \tilde{B}_k + \frac{(\tilde{y}_k - \tilde{B}_k \tilde{s}_k)(\tilde{y}_k - \tilde{B}_k \tilde{s}_k)^{T}}
+    {(\tilde{y}_k - \tilde{B}_k \tilde{s}_k)^{T} \tilde{s}_k}                                                                   \\
+                    & = S^TB_kS + \frac{(S^Ty_k - S^T B_k S S^{-1} s_k)(S^Ty_k - S^TB_kS S^{-1} s_k)^{T}}
+    {(S^Ty_k - S^TB_kSS^{-1} s_k)^{T} S^{-1} s_k}                                                                               \\
+                    & = S^TB_kS + \frac{S^T(y_k -  B_k s_k)(y_k - B_ks_k)^{T}S}
+    {(y_k - B_k s_k)^{T} S S^{-1} s_k}                                                                                          \\
+                    & = S^T\underbrace{\left(B_k + \frac{(y_k -  B_k s_k)(y_k - B_ks_k)^{T}}
+        {(y_k - B_k s_k)^{T}  s_k}\right)}_{B_{k+1}}S
 \end{align*}
 The procedure for the BFGS update rule is identical.\hfill\sq
 \subsubsection{Exercise 2.12}
 This question is not entirely explicit in how to setup the problem, so I will make some assumptions to illustrate the effect of scaling.
 Given some ''properly scaled'' function $g(x_1, x_2)$ and take $f$ to be the following function
 \[
-f(x_1,x_2) = g(k_1x_1, k_2x_2)
+    f(x_1,x_2) = g(k_1x_1, k_2x_2)
 \]
 where $k_1 \gg k_2$ are scale factors to make $f$ poorly scaled.
 Given the Hessian has full rank, we can always choose a coordinate system in which the mixed partial derivatives are 0, so we will simply assume that is the case for $\pd[2][][x_1,x_2]$.
 This means the Hessian is:
 \[
-\nabla^2f = \begin{pmatrix}
-    k_1^2\pd[2][g][x_1^2]&0\\
-    0&k_2^2\pd[2][g][x_2^2]
-\end{pmatrix} 
+    \nabla^2f = \begin{pmatrix}
+        k_1^2\pd[2][g][x_1^2] & 0                     \\
+        0                     & k_2^2\pd[2][g][x_2^2]
+    \end{pmatrix}
 \]
 The condition number of a matrix, $\kappa(A)$, is the quotient between its largest and smallest singular values (which for a square matrix is the absolute value of its eigenvalues).
 Denoting the set of eigenvalues of a matrix by $\Lambda$, one can write
 \[
-\kappa(A) = \underset{\lambda_1, \lambda_2 \in \Lambda}{\operatorname{sup}}\left|\frac{\lambda_1}{\lambda_2}\right|
+    \kappa(A) = \underset{\lambda_1, \lambda_2 \in \Lambda}{\operatorname{sup}}\left|\frac{\lambda_1}{\lambda_2}\right|
 \]
 In our case, that becomes:
 \[
-\kappa \left( \nabla^2 f \right) = \frac{\left|k_1^2\pd[2][g][x_1^2]\right|}{\left|k_2^2\pd[2][g][x_2^2]\right|}
+    \kappa \left( \nabla^2 f \right) = \frac{\left|k_1^2\pd[2][g][x_1^2]\right|}{\left|k_2^2\pd[2][g][x_2^2]\right|}
 \]
 Now if we assume that ''properly scaled'' means that $|\pd[2][g][x_1^2]| \approx |\pd[2][g][x_2^2]|$ at the optimum then that means
 \[
-\kappa \left( \nabla^2 f \right) \approx \frac{k^2_1}{k_2^2}
+    \kappa \left( \nabla^2 f \right) \approx \frac{k^2_1}{k_2^2}
 \]
 So if one axis has a characteristic length of $\sim 10^6$ times larger than the other, the condition number will be $10^{12}$!

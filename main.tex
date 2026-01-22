@@ -15,6 +15,9 @@
 \usepackage{xparse}
 \usepackage{etoolbox} 
 
+\usepackage[style=numeric, backend=biber]{biblatex} 
+\addbibresource{ref.bib} 
+
 \DeclareMathAlphabet{\mathbbold}{U}{bbold}{m}{n}
 
 % Special command for partial derivatives
@@ -89,4 +92,5 @@
 \input{chapters/theory_of_constrained_optimization}
 \input{chapters/lp_the_simplex_method.tex}
 
+\printbibliography
 \end{document}
