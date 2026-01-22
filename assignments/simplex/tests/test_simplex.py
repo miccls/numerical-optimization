@@ -1,34 +1,50 @@
 import time
 
+import jaxtyping
 import numpy as np
 import pytest
 
-from simplex import lp_problem, math, pivoting_strategy, solver
+from simplex_solutions import lp_problem, math, pivoting_strategy, solver
 
 
 class TestPivoting:
+    def test_jaxtyping(self) -> None:
+        """Test that we get a runtime error from jaxtyping due to calling the
+        function with arrays with dimensions that are not consistent with the annotations.
+        """
+
+        with pytest.raises(jaxtyping.TypeCheckError):
+            pivoting_strategy.SmallestSubscriptRule().pick_entering_index(
+                np.array([1.0, 2.0, 3.0]), np.array([1, 2])
+            )
+
     def test_smallest_subscript_entering(self) -> None:
-        reduced_costs = np.array([1, 2, 3, 4, -1, -2, -3], dtype=float)
-        non_basic_vars = np.array([3, 4, 5, 6, 0, 1, 2])
+        reduced_costs = np.array([0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0])
+        non_basic_vars = np.array([0, 4, 5, 6, 3, 1, 2])
         assert (
             pivoting_strategy.SmallestSubscriptRule().pick_entering_index(
                 reduced_costs, non_basic_vars
             )
-            == 0
+            == 1
         )
 
-    # def test_smallest_subscript_exiting(self) -> None:
-    #     x = np.array([1, 2, 3, 4, 5, 6])
-    #     u = np.array([1, -4, 1, 8, 1, 12])
-    #     basic_vars = [10, 2, 4, 6, 7, 20]
-    #     ratios = np.array([xi / ui for xi, ui in zip(x, u, strict=True)])
+    def test_smallest_subscript_exiting(self) -> None:
+        x_basis = np.array(
+            [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+        )
+        d = np.array(
+            [1.0, -4.0, 1.0, 8.0, 1.0, 12.0],
+        )
+        assert x_basis / d == pytest.approx(np.array([1.0, -0.5, 3.0, 0.5, 5.0, 0.5]))
 
-    #     assert (
-    #         pivoting_strategy.SmallestSubscriptRule().pick_exiting_index(
-    #             ratios, u, basic_vars
-    #         )
-    #         == 6
-    #     )
+        basic_vars = np.array([10, 2, 4, 20, 7, 6])
+        exiting_index = pivoting_strategy.SmallestSubscriptRule().pick_exiting_index(
+            basic_vars, x_basis, d
+        )
+        exiting_variable = basic_vars[exiting_index]
+
+        assert exiting_index == 5
+        assert exiting_variable == 6
 
 
 class TestInverseComputation:
