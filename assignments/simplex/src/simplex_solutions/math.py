@@ -1,13 +1,48 @@
 import jaxtyping
 import numpy as np
+from numpy.typing import NDArray
 
 
 def update_inverse(
-    a: jaxtyping.Float[np.ndarray, "m n"],
-    b_inv: jaxtyping.Float[np.ndarray, "m m"],
+    a: jaxtyping.Float[NDArray[np.float64], "m n"],
+    b_inv: jaxtyping.Float[NDArray[np.float64], "m m"],
     entering_variable: int,
     exiting_index: int,
-) -> jaxtyping.Float[np.ndarray, "m m"]:
-    # TODO(you): Implement a numerically efficient way to calculate the inverse
-    # of the new basis matrix after performing a pivot.
-    return np.array([])
+) -> jaxtyping.Float[NDArray[np.float64], "m m"]:
+    """
+    Computes `B_new^-1` where `B_new` is formed by replacing column `exiting_index`
+    in the matrix `B` with the column `A[:, entering_variable]`.
+
+    Uses the Sherman-Morrison formula,
+    ```
+    (B + u * v^T)^-1 = B^-1 - (B^-1 * u * v^T * B^-1)/(1 + v^T * B^-1 * u),
+    ```
+    with
+    ```
+    u = -B[:, exiting_index] + A[:, entering_variable],
+    ```
+    and `v` a vector with zeros everywhere except a 1 at `exiting_index`.
+
+    The product of the old inverse with the column vector u becomes,
+    ```
+    B^-1 * u = -v + B^-1 * A[:, entering_variable] = -v + d,
+    ```
+    where `d` is the basic direction vector.
+
+    Args:
+        a: constraint matrix.
+        b_inv: inverse of the current basis matrix.
+        entering_variable: variable index for the variable entering the basis.
+        exiting_index: index of the column in the basis matrix that should be replaced.
+
+    Returns:
+        inverse of the updated basis matrix, B_new^-1.
+    """
+
+    # O(m^2)
+    d = b_inv @ a[:, [entering_variable]]
+    v = np.zeros((a.shape[0], 1))
+    v[exiting_index] = 1
+
+    # O(m^2)
+    return b_inv - ((-v + d) @ b_inv[[exiting_index], :]) / np.float64(d[exiting_index])

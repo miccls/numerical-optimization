@@ -51,35 +51,32 @@ class TestInverseComputation:
     def test_update_inverse(self) -> None:
         a = np.array(
             [
-                [1, 2, 3, 4],
-                [4, 3, 2, 1],
-            ],
-            dtype=float,
+                [1.0, 2.0, 3.0, 4.0],
+                [4.0, 3.0, 2.0, 1.0],
+            ]
         )
         basis = np.array([1, 2], dtype=int)
         basis_matrix = a[:, basis]
         assert basis_matrix == pytest.approx(
             np.array(
                 [
-                    [2, 3],
-                    [3, 2],
-                ],
-                dtype=float,
+                    [2.0, 3.0],
+                    [3.0, 2.0],
+                ]
             )
         )
         b_inv = np.linalg.inv(basis_matrix)
 
         # Switch out variable 2 for variable 3
         entering_variable = 3
-
         exiting_index = 1
-        exiting_variable = basis[exiting_index]
-        assert exiting_variable == 2
+        assert basis[exiting_index] == 2
         basis[exiting_index] = entering_variable
 
         b_inv = math.update_inverse(a, b_inv, entering_variable, exiting_index)
+        b_inv_expected = np.linalg.inv(a[:, basis])
 
-        assert np.allclose(b_inv, np.linalg.inv(a[:, basis]))
+        assert b_inv == pytest.approx(b_inv_expected)
 
     def test_update_speed(self) -> None:
         rng = np.random.default_rng(1337)
@@ -104,10 +101,14 @@ class TestInverseComputation:
 
         time_in_ms = (end_time - start_time) * 1000
 
-        assert np.allclose(
-            inv_basis_matrix @ constraint_matrix[:, new_basis], np.eye(500)
+        assert inv_basis_matrix @ constraint_matrix[:, new_basis] == pytest.approx(
+            np.eye(500)
         )
-        assert time_in_ms < 10, f"Should take less than 10 ms, took {time_in_ms}"
+
+        time_limit_ms = 10
+        assert time_in_ms < time_limit_ms, (
+            f"Should take less than {time_limit_ms} ms, took {time_in_ms}"
+        )
 
 
 @pytest.fixture()
