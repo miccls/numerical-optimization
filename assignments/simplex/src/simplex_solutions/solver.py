@@ -67,16 +67,22 @@ class Solver:
         self.basis_history_.append(basis_signature)
         return False
 
-    def find_basic_feasible_solution(
+    def find_initial_basis(
         self,
         problem: lp_problem.LpProblem,
-    ) -> jaxtyping.Int[np.ndarray, " n"]:
+    ) -> jaxtyping.Int[np.ndarray, " {problem.constraint_matrix.shape[0]}"]:
         """
         Finds a basic feasible solution by solving an auxiliary LP. Throw a SolveFailedError if it fails.
+
+        Need to use the symbolic expression " {problem.constraint_matrix.shape[0]}" instead of " m" in the
+        jaxtyping annotation. The constraint_matrix field in the LpProblem dataclass is annotated with "m n",
+        but the runtime type checker can't see the annotations inside the dataclass, see
+        https://github.com/patrick-kidger/jaxtyping/issues/342.
         """
+
         # TODO(you): Set up an auxiliary LP whose solution is a basic feasible solution to the original problem
         # See page 378 in the book, for example.
-        return np.zeros(problem.objective.shape, dtype=int)
+        return np.zeros(problem.constraint_matrix.shape[0], dtype=int)
 
     def solve(
         self,
@@ -90,16 +96,14 @@ class Solver:
             basis = np.array(initial_basis)
         else:
             try:
-                basis = self.find_basic_feasible_solution(problem)
+                basis = self.find_initial_basis(problem)
             except SolveFailedError:
                 return (SolverStatus.INFEASIBLE, None)
 
-        inv_basis_matrix: jaxtyping.Float[np.ndarray, "m m"] = np.linalg.inv(
-            problem.constraint_matrix[:, basis]
-        )
+        inv_basis_matrix = np.linalg.inv(problem.constraint_matrix[:, basis])
         # x_basis is the values of the basic variables
         # TODO(you): set the correct values for x_basis here
-        x_basis: jaxtyping.Float[np.ndarray, " m"] = np.zeros(0)
+        x_basis = np.zeros(0)
 
         logger.info("Starting simplex algorithm...")
 

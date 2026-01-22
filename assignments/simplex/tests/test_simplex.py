@@ -113,18 +113,19 @@ class TestInverseComputation:
 
 @pytest.fixture()
 def example_problem_35() -> lp_problem.LpProblem:
-    # Example 3.5 in "Introduction to Linear Programming", page 101.
+    """Example 3.5 in "Introduction to Linear Programming", page 101."""
     a = np.array(
         [
             [1, 2, 2, 1, 0, 0],
             [2, 1, 2, 0, 1, 0],
             [2, 2, 1, 0, 0, 1],
-        ]
+        ],
+        dtype=np.float64,
     )
 
-    b = np.array([20, 20, 20]).T
+    b = np.array([20, 20, 20], dtype=np.float64).T
 
-    c = np.array([-10, -12, -12, 0, 0, 0])
+    c = np.array([-10, -12, -12, 0, 0, 0], dtype=np.float64)
 
     return lp_problem.LpProblem(a, b, c)
 
@@ -156,6 +157,10 @@ class TestSolver:
         assert sorted(solve_result.basis) == [0, 1, 2]
         assert solve_result.solution == pytest.approx(np.array([4, 4, 4, 0, 0, 0]))
         assert solve_result.objective_value == pytest.approx(-136)
+
+    def test_find_initial_basis(self, example_problem_35: lp_problem.LpProblem) -> None:
+        simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
+        assert len(simplex_solver.find_initial_basis(example_problem_35)) == 3
 
     def test_problem_without_start_solution(
         self, example_problem_35: lp_problem.LpProblem
