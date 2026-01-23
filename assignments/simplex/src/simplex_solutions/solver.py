@@ -90,7 +90,7 @@ class Solver:
         if pivot_strategy is not None:
             self.pivoting_strategy_ = pivot_strategy
         else:
-            self.pivoting_strategy_ = pivoting_strategy.SmallestSubscriptRule()
+            self.pivoting_strategy_ = pivoting_strategy.BlandsRule()
 
         self.solve_history_ = SolveHistory()
 
@@ -125,7 +125,7 @@ class Solver:
         )
         # Use the smallest subscript rule to hopefully basis containing the original variables
         phase_one_solver = Solver(
-            pivot_strategy=pivoting_strategy.SmallestSubscriptRule()
+            pivot_strategy=pivoting_strategy.BlandsRule()
         )
         phase_one_result = phase_one_solver.solve(
             phase_one_problem,

@@ -19,7 +19,7 @@ class TestPivoting:
         """
 
         with pytest.raises(jaxtyping.TypeCheckError):
-            pivoting_strategy.SmallestSubscriptRule().pick_entering_index(
+            pivoting_strategy.BlandsRule().pick_entering_index(
                 np.array([1.0, 2.0, 3.0]), np.array([1, 2])
             )
 
@@ -27,7 +27,7 @@ class TestPivoting:
         reduced_costs = np.array([0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0])
         non_basic_vars = np.array([0, 4, 5, 6, 3, 1, 2])
         assert (
-            pivoting_strategy.SmallestSubscriptRule().pick_entering_index(
+            pivoting_strategy.BlandsRule().pick_entering_index(
                 reduced_costs, non_basic_vars
             )
             == 1
@@ -43,7 +43,7 @@ class TestPivoting:
         assert x_basis / d == pytest.approx(np.array([1.0, -0.5, 3.0, 0.5, 5.0, 0.5]))
 
         basic_vars = np.array([10, 2, 4, 20, 7, 6])
-        exiting_index = pivoting_strategy.SmallestSubscriptRule().pick_exiting_index(
+        exiting_index = pivoting_strategy.BlandsRule().pick_exiting_index(
             basic_vars, x_basis, d
         )
         exiting_variable = basic_vars[exiting_index]
@@ -198,21 +198,25 @@ class TestSolver:
         # This is an example of an LP which cycles under some pivot rules.
         a = np.array(
             [
-                [-0.5, 5.5, 2.5, -9, -1, 0, 0],
-                [-0.5, 1.5, 0.5, -1, 0, -1, 0],
-                [1, 0, 0, 0, 0, 0, 1],
+                [-0.5, 5.5, 2.5, -9.0, -1.0, 0.0, 0.0],
+                [-0.5, 1.5, 0.5, -1.0, 0.0, -1.0, 0.0],
+                [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
             ],
             dtype=float,
         )
         b = np.array([0, 0, 1], dtype=float).T
         c = np.array([-10, 57, 9, 24, 0, 0, 0], dtype=float)
+        initial_basis = np.array([4, 5, 6])
 
-        # TODO(danielw): I don't get cycling in my implementation I get -1.0 as optimal value instead, try with Dantzig's original rule instead
-        # with pytest.raises(solver.SimplexCyclingError):
-        #     solver.Solver().solve(lp_problem.LpProblem(a, b, c))
+        with pytest.raises(
+            solver.SimplexCyclingError, match="Basis cycle of length 6 detected"
+        ):
+            solver.Solver(pivoting_strategy.DantzigsRule()).solve(
+                lp_problem.LpProblem(a, b, c), initial_basis=initial_basis
+            )
 
-        assert solver.Solver().solve(
-            lp_problem.LpProblem(a, b, c)
+        assert solver.Solver(pivoting_strategy.BlandsRule()).solve(
+            lp_problem.LpProblem(a, b, c), initial_basis=initial_basis
         ).objective_value == pytest.approx(-1.0)
 
     def test_infeasible_problem(self) -> None:
@@ -251,8 +255,16 @@ class TestSolver:
             [0.0, -16.0, -52 / 3]
         )
 
+    @pytest.mark.parametrize(
+        "strategy",
+        [pivoting_strategy.BlandsRule, pivoting_strategy.DantzigsRule],
+    )
     def test_example_13_1_from_book_without_initial_basis(
-        self, example_problem_131: tuple[lp_problem.LpProblem, ArrayI]
+        self,
+        example_problem_131: tuple[lp_problem.LpProblem, ArrayI],
+        strategy: type[pivoting_strategy.PivotingStrategy],
     ) -> None:
-        solve_result = solver.Solver().solve(example_problem_131[0])
+        solve_result = solver.Solver(pivot_strategy=strategy()).solve(
+            example_problem_131[0]
+        )
         assert solve_result.objective_value == pytest.approx(-52 / 3)
