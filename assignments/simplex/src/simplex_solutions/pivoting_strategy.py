@@ -4,7 +4,7 @@ from typing import override
 import jaxtyping
 import numpy as np
 
-from simplex_solutions.numpy_type_aliases import ArrayF, ArrayI
+from common.numpy_type_aliases import ArrayF, ArrayI
 
 
 class PivotingStrategy(ABC):

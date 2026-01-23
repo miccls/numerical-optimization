@@ -4,8 +4,8 @@ from dataclasses import dataclass
 import jaxtyping
 import numpy as np
 
+from common.numpy_type_aliases import ArrayF, ArrayI
 from simplex_solutions import linear_algebra, lp_problem, pivoting_strategy
-from simplex_solutions.numpy_type_aliases import ArrayF, ArrayI
 
 logger = logging.getLogger(__name__)
 
@@ -124,9 +124,7 @@ class Solver:
             ),
         )
         # Use the smallest subscript rule to hopefully basis containing the original variables
-        phase_one_solver = Solver(
-            pivot_strategy=pivoting_strategy.BlandsRule()
-        )
+        phase_one_solver = Solver(pivot_strategy=pivoting_strategy.BlandsRule())
         phase_one_result = phase_one_solver.solve(
             phase_one_problem,
             initial_basis=np.array(

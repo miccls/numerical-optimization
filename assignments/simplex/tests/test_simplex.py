@@ -5,11 +5,11 @@ import jaxtyping
 import numpy as np
 import pytest
 
+from common.numpy_type_aliases import ArrayI
 from simplex_solutions import linear_algebra, lp_problem, pivoting_strategy, solver
-from simplex_solutions.numpy_type_aliases import ArrayI
 
 if TYPE_CHECKING:
-    from simplex_solutions.numpy_type_aliases import ArrayF
+    from common.numpy_type_aliases import ArrayF
 
 
 class TestPivoting:

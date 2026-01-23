@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import jaxtyping
 
-from simplex_solutions.numpy_type_aliases import ArrayF
+from common.numpy_type_aliases import ArrayF
 
 
 @dataclass(frozen=True)

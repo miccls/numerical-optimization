@@ -1,7 +1,7 @@
 import jaxtyping
 import numpy as np
 
-from simplex_solutions.numpy_type_aliases import ArrayF
+from common.numpy_type_aliases import ArrayF
 
 
 def update_inverse(
