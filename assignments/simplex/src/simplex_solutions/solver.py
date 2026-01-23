@@ -39,6 +39,7 @@ class IterationLimitError(SolveFailedError):
 
 MIN_CYCLE_LEN = 2
 OBJECTIVE_IMPROVEMENT_TOL = 1e-9
+OPTIMALITY_TOL = 1e-9
 
 
 class SolveHistory:
@@ -73,7 +74,7 @@ class SolveHistory:
 
         if basis_signature in self.basis_cycle_:
             raise SimplexCyclingError(
-                f"Basis cycle of length {len(self.basis_cycle_)} detected: {self.basis_cycle_}"
+                f"Basis cycle of length {len(self.basis_cycle_)} detected"
             )
         self.basis_cycle_.add(basis_signature)
 
@@ -102,7 +103,7 @@ class Solver:
         problem: lp_problem.LpProblem,
     ) -> jaxtyping.Int[ArrayI, " {problem.constraint_matrix.shape[0]}"]:
         """
-        Finds a basic feasible solution by solving an auxiliary LP. Throw a SolveFailedError if it fails.
+        Finds a basic feasible solution by solving an auxiliary LP. Throws a SolveFailedError if it fails.
 
         Need to use the symbolic expression " {problem.constraint_matrix.shape[0]}" instead of " m" in the
         jaxtyping annotation. The constraint_matrix field in the LpProblem dataclass is annotated with "m n",
@@ -110,9 +111,47 @@ class Solver:
         https://github.com/patrick-kidger/jaxtyping/issues/342.
         """
 
+        logger.info("Solving auxiliary phase one LP to find a starting basis...")
+
+        e_matrix = np.diag(np.array([1.0 if b >= 0 else -1.0 for b in problem.rhs]))
+        phase_one_problem = lp_problem.LpProblem(
+            constraint_matrix=np.concatenate(
+                [problem.constraint_matrix, e_matrix], axis=1
+            ),
+            rhs=np.array(problem.rhs),
+            objective=np.concatenate(
+                [np.zeros(problem.num_variables), np.ones(len(problem.rhs))]
+            ),
+        )
+        # Use the smallest subscript rule to hopefully basis containing the original variables
+        phase_one_solver = Solver(
+            pivot_strategy=pivoting_strategy.SmallestSubscriptRule()
+        )
+        phase_one_result = phase_one_solver.solve(
+            phase_one_problem,
+            initial_basis=np.array(
+                range(problem.num_variables, phase_one_problem.num_variables)
+            ),
+        )
+        if phase_one_result.objective_value > OPTIMALITY_TOL:
+            raise SolveFailedError(
+                f"Phase one objective value {phase_one_result.objective_value} is positive: Original problem is infeasible"
+            )
+
+        max_print_size = 10
+        logger.info(
+            f"Found starting basis {phase_one_result.basis if len(phase_one_result.basis) < max_print_size else ''}"
+        )
+
+        # TODO(danielw): How to do Phase 2 in the book? Even with the smallest subscript rule i think we can have
+        # some of the auxiliary variables in the optimal phase one basis.
+        # For example what happens if the original LP is Ax = 0?
+
+        return phase_one_result.basis
+
         # TODO(you): Set up an auxiliary LP whose solution is a basic feasible solution to the original problem
         # See page 378 in the book, for example.
-        return np.zeros(problem.constraint_matrix.shape[0], dtype=int)
+        # return np.zeros(problem.constraint_matrix.shape[0], dtype=int)
 
     def _compute_reduced_costs(
         self,
@@ -121,10 +160,11 @@ class Solver:
         non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
         inv_basis_matrix: jaxtyping.Float[ArrayF, "m m"],
     ) -> jaxtyping.Float[ArrayF, " num_nonbasic"]:
-        lagrange_parameters = inv_basis_matrix @ problem.objective[basis]
+        # TODO(danielw): avoid mat-mat mul here
         return (
             problem.objective[non_basic_vars]
-            - problem.constraint_matrix[:, non_basic_vars].T @ lagrange_parameters
+            - (inv_basis_matrix @ problem.constraint_matrix[:, non_basic_vars]).T
+            @ problem.objective[basis]
         )
 
     def _finalize_result(
@@ -184,7 +224,7 @@ class Solver:
             )
             if np.all(reduced_costs >= 0):
                 logger.info(
-                    f"Simplex algorithm finished after {iteration - 1} iterations."
+                    f"Simplex algorithm found optimal objective {self.solve_history_.objective_history[-1]} after {iteration - 1} iterations."
                 )
                 return self._finalize_result(problem, basis, x_basis)
 
