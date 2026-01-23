@@ -16,6 +16,7 @@ class SolverStatus(StrEnum):
     INFEASIBLE = "Infeasible"
     UNBOUNDED = "Unbounded"
     CYCLING = "Cycling"
+    ITERATION_LIMIT = "Iteration limit reached"
 
 
 @dataclass(frozen=True)
@@ -85,6 +86,34 @@ class Solver:
         # See page 378 in the book, for example.
         return np.zeros(problem.constraint_matrix.shape[0], dtype=int)
 
+    def _compute_reduced_costs(
+        self,
+        problem: lp_problem.LpProblem,
+        basis: jaxtyping.Int[ArrayI, " m"],
+        non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
+        inv_basis_matrix: jaxtyping.Float[ArrayF, "m m"],
+    ) -> jaxtyping.Float[ArrayF, " num_nonbasic"]:
+        lagrange_parameters = inv_basis_matrix @ problem.objective[basis]
+        return (
+            problem.objective[non_basic_vars]
+            - problem.constraint_matrix[:, non_basic_vars].T @ lagrange_parameters
+        )
+
+    def _finalize_result(
+        self,
+        problem: lp_problem.LpProblem,
+        basis: jaxtyping.Int[ArrayI, " m"],
+        x_basis: jaxtyping.Float[ArrayF, " m"],
+    ) -> SolveResult:
+        solution = np.zeros(problem.num_variables)
+        solution[basis] = x_basis
+
+        return SolveResult(
+            basis=basis,
+            solution=solution,
+            objective_value=self.objective_history_[-1],
+        )
+
     def solve(
         self,
         problem: lp_problem.LpProblem,
@@ -113,16 +142,24 @@ class Solver:
         self.objective_history_ = [float(problem.objective[basis] @ x_basis)]
 
         for iteration in range(1, self.max_iter_):
+            non_basic_vars = np.array(
+                [i for i in range(problem.num_variables) if i not in set(basis)]
+            )
+
             # Step 1: Compute reduced costs
             # TODO(you): set to the correct reduced costs
-            reduced_costs: jaxtyping.Float[ArrayF, " n-m"] = np.zeros(0)
+            reduced_costs = self._compute_reduced_costs(
+                problem, basis, non_basic_vars, inv_basis_matrix
+            )
             if np.all(reduced_costs >= 0):
-                break
+                logger.info(
+                    f"Simplex algorithm finished after {iteration - 1} iterations."
+                )
+                return SolverStatus.SUCCESS, self._finalize_result(
+                    problem, basis, x_basis
+                )
 
             # Step 2: Determine the entering variable
-            non_basic_vars = np.array(
-                i for i in range(problem.num_variables) if i not in set(basis)
-            )
             entering_variable: int = self.pivoting_strategy_.pick_entering_index(
                 reduced_costs, non_basic_vars
             )
@@ -131,7 +168,7 @@ class Solver:
             d = inv_basis_matrix @ problem.constraint_matrix[:, entering_variable]
 
             if np.all(d <= 0):
-                return (SolverStatus.UNBOUNDED, None)
+                return SolverStatus.UNBOUNDED, None
 
             # Step 3: Determine the exiting variable
             basic_exiting_index = self.pivoting_strategy_.pick_exiting_index(
@@ -150,13 +187,16 @@ class Solver:
 
             # Step 5: Update the basic solution from the basic direction
             # TODO(you): ...
+            x_entering = float(x_basis[basic_exiting_index] / d[basic_exiting_index])
+            x_basis -= x_entering * d
+            x_basis[basic_exiting_index] = x_entering
 
             self.objective_history_.append(float(problem.objective[basis] @ x_basis))
 
             logger.info(
                 f"Iteration {iteration} ::: "
-                f"Leaving index: {exiting_variable}, "
-                f"Entering index: {entering_variable}, "
+                f"Entering variable: {entering_variable}, "
+                f"Exiting variable: {exiting_variable}, "
                 f"Objective: {self.objective_history_[-1]}"
             )
 
@@ -164,14 +204,6 @@ class Solver:
                 return SolverStatus.CYCLING, None
 
         logger.info(
-            f"Simplex algorithm terminated after {len(self.objective_history_) - 1} iterations."
+            f"Simplex algorithm terminated due to {self.max_iter_} iteration limit"
         )
-
-        solution = np.zeros(problem.num_variables)
-        solution[basis] = x_basis
-
-        return SolverStatus.SUCCESS, SolveResult(
-            basis=basis,
-            solution=solution,
-            objective_value=self.objective_history_[-1],
-        )
+        return SolverStatus.ITERATION_LIMIT, None

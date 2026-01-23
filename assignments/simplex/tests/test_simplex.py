@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from simplex_solutions import lp_problem, math, pivoting_strategy, solver
+from simplex_solutions.numpy_type_aliases import ArrayI
 
 if TYPE_CHECKING:
     from simplex_solutions.numpy_type_aliases import ArrayF
@@ -134,6 +135,23 @@ def example_problem_35() -> lp_problem.LpProblem:
     return lp_problem.LpProblem(a, b, c)
 
 
+@pytest.fixture()
+def example_problem_131() -> tuple[lp_problem.LpProblem, ArrayI]:
+    """Example 13.1 in "Introduction to Linear Programming", page 371."""
+    a = np.array(
+        [
+            [1.0, 1.0, 1.0, 0.0],
+            [2.0, 0.5, 0.0, 1.0],
+        ],
+    )
+    b = np.array([5.0, 8.0])
+    c = np.array([-4.0, -2.0, 0.0, 0.0])
+
+    initial_basis = np.array([2, 3])
+
+    return lp_problem.LpProblem(a, b, c), initial_basis
+
+
 class TestSolver:
     def test_problem_with_start_solution(
         self, example_problem_35: lp_problem.LpProblem
@@ -223,16 +241,25 @@ class TestSolver:
 
         assert status == solver.SolverStatus.UNBOUNDED
 
-    def test_example_13_1_from_book(self) -> None:
+    def test_example_13_1_from_book(
+        self, example_problem_131: tuple[lp_problem.LpProblem, ArrayI]
+    ) -> None:
         # Lukas spotted typo in book, test to verify!
-
-        a = np.array([[1, 1, 1, 0], [2, 0.5, 0, 1]])
-        b = np.array([5, 8]).T
-        c = np.array([-4, -2, 0, 0])
-
         simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
-        status, solve_result = simplex_solver.solve(lp_problem.LpProblem(a, b, c))
-        print(f"{solve_result=}")
+        status, solve_result = simplex_solver.solve(
+            example_problem_131[0], example_problem_131[1]
+        )
+
+        assert status == solver.SolverStatus.SUCCESS
+        assert solve_result is not None
+        assert solve_result.objective_value == pytest.approx(-52 / 3)
+
+    def test_example_13_1_from_book_without_initial_basis(
+        self, example_problem_131: tuple[lp_problem.LpProblem, ArrayI]
+    ) -> None:
+        # Lukas spotted typo in book, test to verify!
+        simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
+        status, solve_result = simplex_solver.solve(example_problem_131[0])
 
         assert status == solver.SolverStatus.SUCCESS
         assert solve_result is not None
