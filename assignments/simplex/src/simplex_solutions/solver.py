@@ -158,11 +158,10 @@ class Solver:
         non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
         inv_basis_matrix: jaxtyping.Float[ArrayF, "m m"],
     ) -> jaxtyping.Float[ArrayF, " num_nonbasic"]:
-        # TODO(danielw): avoid mat-mat mul here
-        return (
-            problem.objective[non_basic_vars]
-            - (inv_basis_matrix @ problem.constraint_matrix[:, non_basic_vars]).T
-            @ problem.objective[basis]
+        n_matrix = problem.constraint_matrix[:, non_basic_vars]
+
+        return problem.objective[non_basic_vars] - n_matrix.T @ (
+            inv_basis_matrix.T @ problem.objective[basis]
         )
 
     def _finalize_result(
