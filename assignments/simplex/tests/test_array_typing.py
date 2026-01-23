@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from beartype import beartype as typechecker
 
-# from typeguard import typechecked as typechecker # doesn't work at all with typeguard 4.4.4, the jaxtyping docs what you to use an old version 2.* as workaround..
+# from typeguard import typechecked as typechecker # doesn't work at all with typeguard 4.4.4, the jaxtyping docs want you to use an old version 2.* as workaround..
 
 # We use the explicit decorator @jaxtyping.jaxtyped here. In the simplex modules
 # we use install_import_hook in the __init__.py to automatically add decorators to all functions.
@@ -94,3 +94,22 @@ def test_checking_dims_in_output_dataclass() -> None:
     result = produce_dataclass(np.zeros(2))  # no jaxtyping.TypeCheckError thrown here
     assert result.vector.shape == (3,)
     assert result.matrix.shape == (3, 3)
+
+
+def test_numpy_typing() -> None:
+    f_matrix: np.ndarray[tuple[int, int], np.dtype[np.float64]] = np.zeros((5, 5))
+    f_vector: np.ndarray[tuple[int], np.dtype[np.float64]] = np.zeros(5)
+    # f_matrix = f_vector  # mypy flags this!
+    # assert f_matrix.shape == (5,)  # mypy flags this!, test passes
+
+    g_vector = (
+        f_matrix @ f_vector
+    )  # shape information is lost in matmul, result type has shape type tuple[int,...]
+    f_matrix = g_vector  # no error from mypy
+
+    # i_vector: np.ndarray[tuple[int], np.dtype[np.int_]] = f_vector  # mypy flags this!
+    # i_array: np.typing.NDArray[np.int_] = f_vector  # mypy flags this!
+    f_array: np.typing.NDArray[np.float64] = (
+        f_vector  # assigning to generic shape ok in mypy
+    )
+    f_vector = f_array  # assigning generic shape to fixed shape ok in mypy

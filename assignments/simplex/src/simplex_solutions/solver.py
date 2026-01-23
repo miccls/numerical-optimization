@@ -6,6 +6,7 @@ import jaxtyping
 import numpy as np
 
 from simplex_solutions import lp_problem, math, pivoting_strategy
+from simplex_solutions.numpy_type_aliases import ArrayF, ArrayI
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +20,8 @@ class SolverStatus(StrEnum):
 
 @dataclass(frozen=True)
 class SolveResult:
-    basis: jaxtyping.Float[np.ndarray, " m"]
-    solution: jaxtyping.Float[np.ndarray, " n"]
+    basis: jaxtyping.Int[ArrayI, " m"]
+    solution: jaxtyping.Float[ArrayF, " n"]
     objective_value: float
 
 
@@ -39,13 +40,13 @@ class Solver:
         max_iterations: int = 100,
     ) -> None:
         self.pivoting_strategy_ = pivoting_strategy
-        self.basis_history_: list[tuple[int, ...]] = []
+        self.basis_history_: list[tuple[np.integer, ...]] = []
         self.objective_history_: list[float] = []
         self.max_iter_ = max_iterations
 
     def _is_cycling(
         self,
-        current_basis: jaxtyping.Int[np.ndarray, " m"],
+        current_basis: jaxtyping.Int[ArrayI, " m"],
     ) -> bool:
         """Checks for cycling in the simplex algorithm."""
         if len(self.objective_history_) < MIN_CYCLE_LEN:
@@ -70,7 +71,7 @@ class Solver:
     def find_initial_basis(
         self,
         problem: lp_problem.LpProblem,
-    ) -> jaxtyping.Int[np.ndarray, " {problem.constraint_matrix.shape[0]}"]:
+    ) -> jaxtyping.Int[ArrayI, " {problem.constraint_matrix.shape[0]}"]:
         """
         Finds a basic feasible solution by solving an auxiliary LP. Throw a SolveFailedError if it fails.
 
@@ -87,7 +88,7 @@ class Solver:
     def solve(
         self,
         problem: lp_problem.LpProblem,
-        initial_basis: jaxtyping.Int[np.ndarray, " m"] | None = None,
+        initial_basis: jaxtyping.Int[ArrayI, " m"] | None = None,
     ) -> tuple[
         SolverStatus,
         SolveResult | None,
@@ -101,19 +102,20 @@ class Solver:
                 return (SolverStatus.INFEASIBLE, None)
 
         inv_basis_matrix = np.linalg.inv(problem.constraint_matrix[:, basis])
+
         # x_basis is the values of the basic variables
         # TODO(you): set the correct values for x_basis here
-        x_basis = np.zeros(0)
+        x_basis = inv_basis_matrix @ problem.rhs
 
         logger.info("Starting simplex algorithm...")
 
         self.basis_history_ = []  # Used to check for cycling, only degenerate steps are recorded.
-        self.objective_history_ = [problem.objective[basis] @ x_basis]
+        self.objective_history_ = [float(problem.objective[basis] @ x_basis)]
 
         for iteration in range(1, self.max_iter_):
             # Step 1: Compute reduced costs
             # TODO(you): set to the correct reduced costs
-            reduced_costs: jaxtyping.Float[np.ndarray, " n-m"] = np.zeros(0)
+            reduced_costs: jaxtyping.Float[ArrayF, " n-m"] = np.zeros(0)
             if np.all(reduced_costs >= 0):
                 break
 
@@ -149,7 +151,7 @@ class Solver:
             # Step 5: Update the basic solution from the basic direction
             # TODO(you): ...
 
-            self.objective_history_.append(problem.objective[basis] @ x_basis)
+            self.objective_history_.append(float(problem.objective[basis] @ x_basis))
 
             logger.info(
                 f"Iteration {iteration} ::: "

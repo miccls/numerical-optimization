@@ -2,23 +2,24 @@ from abc import ABC, abstractmethod
 from typing import override
 
 import jaxtyping
-import numpy as np
+
+from simplex_solutions.numpy_type_aliases import ArrayF, ArrayI
 
 
 class PivotingStrategy(ABC):
     @abstractmethod
     def pick_entering_index(
         self,
-        reduced_costs: jaxtyping.Float[np.ndarray, " num_nonbasic"],
-        non_basic_vars: jaxtyping.Int[np.ndarray, " num_nonbasic"],
+        reduced_costs: jaxtyping.Float[ArrayF, " num_nonbasic"],
+        non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
     ) -> int: ...
 
     @abstractmethod
     def pick_exiting_index(
         self,
-        basis: jaxtyping.Int[np.ndarray, " m"],
-        x_basis: jaxtyping.Float[np.ndarray, " m"],
-        basic_direction: jaxtyping.Float[np.ndarray, " m"],
+        basis: jaxtyping.Int[ArrayI, " m"],
+        x_basis: jaxtyping.Float[ArrayF, " m"],
+        basic_direction: jaxtyping.Float[ArrayF, " m"],
     ) -> int: ...
 
 
@@ -30,17 +31,17 @@ class SmallestSubscriptRule(PivotingStrategy):
     @override
     def pick_entering_index(
         self,
-        reduced_costs: jaxtyping.Float[np.ndarray, " num_nonbasic"],
-        non_basic_vars: jaxtyping.Int[np.ndarray, " num_nonbasic"],
+        reduced_costs: jaxtyping.Float[ArrayF, " num_nonbasic"],
+        non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
     ) -> int:
         return int(non_basic_vars[reduced_costs < 0].min())
 
     @override
     def pick_exiting_index(
         self,
-        basis: jaxtyping.Int[np.ndarray, " m"],
-        x_basis: jaxtyping.Float[np.ndarray, " m"],
-        basic_direction: jaxtyping.Float[np.ndarray, " m"],
+        basis: jaxtyping.Int[ArrayI, " m"],
+        x_basis: jaxtyping.Float[ArrayF, " m"],
+        basic_direction: jaxtyping.Float[ArrayF, " m"],
     ) -> int:
         """
         Selects the exiting variable index based on the Smallest Subscript Rule.
@@ -68,4 +69,4 @@ class SmallestSubscriptRule(PivotingStrategy):
             if basic_direction[i] > 0
         )
 
-        return int(smallest_ratio_with_smallest_var_index[2])
+        return smallest_ratio_with_smallest_var_index[2]

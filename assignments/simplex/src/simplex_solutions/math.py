@@ -1,14 +1,15 @@
 import jaxtyping
 import numpy as np
-from numpy.typing import NDArray
+
+from simplex_solutions.numpy_type_aliases import ArrayF
 
 
 def update_inverse(
-    a: jaxtyping.Float[NDArray[np.float64], "m n"],
-    b_inv: jaxtyping.Float[NDArray[np.float64], "m m"],
+    a: jaxtyping.Float[ArrayF, "m n"],
+    b_inv: jaxtyping.Float[ArrayF, "m m"],
     entering_variable: int,
     exiting_index: int,
-) -> jaxtyping.Float[NDArray[np.float64], "m m"]:
+) -> jaxtyping.Float[ArrayF, "m m"]:
     """
     Computes `B_new^-1` where `B_new` is formed by replacing column `exiting_index`
     in the matrix `B` with the column `A[:, entering_variable]`.

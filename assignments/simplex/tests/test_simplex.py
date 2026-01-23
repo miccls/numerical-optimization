@@ -1,10 +1,14 @@
 import time
+from typing import TYPE_CHECKING
 
 import jaxtyping
 import numpy as np
 import pytest
 
 from simplex_solutions import lp_problem, math, pivoting_strategy, solver
+
+if TYPE_CHECKING:
+    from simplex_solutions.numpy_type_aliases import ArrayF
 
 
 class TestPivoting:
@@ -88,7 +92,7 @@ class TestInverseComputation:
         exiting_index = 499
         new_basis = [*basis[:-1], 500]
 
-        inv_basis_matrix = np.eye(500)
+        inv_basis_matrix: ArrayF = np.eye(500)
 
         start_time = time.perf_counter()
         inv_basis_matrix = math.update_inverse(
