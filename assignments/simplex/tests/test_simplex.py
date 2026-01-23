@@ -5,7 +5,7 @@ import jaxtyping
 import numpy as np
 import pytest
 
-from simplex_solutions import lp_problem, math, pivoting_strategy, solver
+from simplex_solutions import linear_algebra, lp_problem, pivoting_strategy, solver
 from simplex_solutions.numpy_type_aliases import ArrayI
 
 if TYPE_CHECKING:
@@ -78,7 +78,9 @@ class TestInverseComputation:
         assert basis[exiting_index] == 2
         basis[exiting_index] = entering_variable
 
-        b_inv = math.update_inverse(a, b_inv, entering_variable, exiting_index)
+        b_inv = linear_algebra.update_inverse(
+            a, b_inv, entering_variable, exiting_index
+        )
         b_inv_expected = np.linalg.inv(a[:, basis])
 
         assert b_inv == pytest.approx(b_inv_expected)
@@ -96,7 +98,7 @@ class TestInverseComputation:
         inv_basis_matrix: ArrayF = np.eye(500)
 
         start_time = time.perf_counter()
-        inv_basis_matrix = math.update_inverse(
+        inv_basis_matrix = linear_algebra.update_inverse(
             constraint_matrix,
             inv_basis_matrix,
             entering_variable,
@@ -168,31 +170,20 @@ class TestSolver:
         )
         assert (x >= 0).all()
 
-        simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
+        solve_result = solver.Solver().solve(example_problem_35, initial_basis=basis)
 
-        (status, solve_result) = simplex_solver.solve(
-            example_problem_35, initial_basis=basis
-        )
-
-        assert status == solver.SolverStatus.SUCCESS
-        assert solve_result is not None
         assert sorted(solve_result.basis) == [0, 1, 2]
         assert solve_result.solution == pytest.approx(np.array([4, 4, 4, 0, 0, 0]))
         assert solve_result.objective_value == pytest.approx(-136)
 
     def test_find_initial_basis(self, example_problem_35: lp_problem.LpProblem) -> None:
-        simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
-        assert len(simplex_solver.find_initial_basis(example_problem_35)) == 3
+        assert len(solver.Solver().find_initial_basis(example_problem_35)) == 3
 
     def test_problem_without_start_solution(
         self, example_problem_35: lp_problem.LpProblem
     ) -> None:
-        simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
+        solve_result = solver.Solver().solve(example_problem_35)
 
-        (status, solve_result) = simplex_solver.solve(example_problem_35)
-
-        assert status == solver.SolverStatus.SUCCESS
-        assert solve_result is not None
         assert sorted(solve_result.basis) == [0, 1, 2]
         assert solve_result.solution == pytest.approx(np.array([4, 4, 4, 0, 0, 0]))
         assert solve_result.objective_value == pytest.approx(-136)
@@ -211,10 +202,8 @@ class TestSolver:
         b = np.array([0, 0, 1]).T
         c = np.array([-10, 57, 9, 24, 0, 0, 0])
 
-        simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
-        status, _ = simplex_solver.solve(lp_problem.LpProblem(a, b, c))
-
-        assert status == solver.SolverStatus.CYCLING
+        with pytest.raises(solver.SimplexCyclingError):
+            solver.Solver().solve(lp_problem.LpProblem(a, b, c))
 
     def test_infeasible_problem(self) -> None:
         # min -x1 s.t. x1 <= 1, x1 >= 2
@@ -223,10 +212,9 @@ class TestSolver:
         b = np.array([1, 2])
         c = np.array([-1, 0, 0])
 
-        simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
         test_problem = lp_problem.LpProblem(a, b, c)
-        status, _ = simplex_solver.solve(test_problem)
-        assert status == solver.SolverStatus.INFEASIBLE
+        with pytest.raises(solver.InfeasibleLpError):
+            solver.Solver().solve(test_problem)
 
     def test_unbounded_problem(self) -> None:
         # min -2*x1 - x2 s.t. x1 - x2 <= 10, 2*x1 <= 40
@@ -235,32 +223,26 @@ class TestSolver:
         b = np.array([10, 40])
         c = np.array([-2, -1, 0, 0])
 
-        simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
         test_problem = lp_problem.LpProblem(a, b, c)
-        status, _ = simplex_solver.solve(test_problem)
-
-        assert status == solver.SolverStatus.UNBOUNDED
+        with pytest.raises(solver.UnboundedLpError):
+            solver.Solver().solve(test_problem)
 
     def test_example_13_1_from_book(
         self, example_problem_131: tuple[lp_problem.LpProblem, ArrayI]
     ) -> None:
         # Lukas spotted typo in book, test to verify!
-        simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
-        status, solve_result = simplex_solver.solve(
-            example_problem_131[0], example_problem_131[1]
+        simplex_solver = solver.Solver()
+        solve_result = simplex_solver.solve(
+            problem=example_problem_131[0], initial_basis=example_problem_131[1]
         )
-
-        assert status == solver.SolverStatus.SUCCESS
-        assert solve_result is not None
         assert solve_result.objective_value == pytest.approx(-52 / 3)
+        assert simplex_solver.history.basis_history == [(2, 3), (0, 2), (0, 1)]
+        assert simplex_solver.history.objective_history == pytest.approx(
+            [0.0, -16.0, -52 / 3]
+        )
 
     def test_example_13_1_from_book_without_initial_basis(
         self, example_problem_131: tuple[lp_problem.LpProblem, ArrayI]
     ) -> None:
-        # Lukas spotted typo in book, test to verify!
-        simplex_solver = solver.Solver(pivoting_strategy.SmallestSubscriptRule())
-        status, solve_result = simplex_solver.solve(example_problem_131[0])
-
-        assert status == solver.SolverStatus.SUCCESS
-        assert solve_result is not None
+        solve_result = solver.Solver().solve(example_problem_131[0])
         assert solve_result.objective_value == pytest.approx(-52 / 3)

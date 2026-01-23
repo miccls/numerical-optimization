@@ -3,8 +3,8 @@ from jaxtyping import install_import_hook
 # Adds jaxtyping decorators, see https://docs.kidger.site/jaxtyping/api/runtime-type-checking/#jaxtyping.install_import_hook
 with install_import_hook("simplex_solutions", "beartype.beartype"):
     from simplex_solutions import (  # noqa: F401
+        linear_algebra,
         lp_problem,
-        math,
         pivoting_strategy,
         solver,
     )

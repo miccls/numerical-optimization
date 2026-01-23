@@ -1,22 +1,13 @@
 import logging
 from dataclasses import dataclass
-from enum import StrEnum
 
 import jaxtyping
 import numpy as np
 
-from simplex_solutions import lp_problem, math, pivoting_strategy
+from simplex_solutions import linear_algebra, lp_problem, pivoting_strategy
 from simplex_solutions.numpy_type_aliases import ArrayF, ArrayI
 
 logger = logging.getLogger(__name__)
-
-
-class SolverStatus(StrEnum):
-    SUCCESS = "Success"
-    INFEASIBLE = "Infeasible"
-    UNBOUNDED = "Unbounded"
-    CYCLING = "Cycling"
-    ITERATION_LIMIT = "Iteration limit reached"
 
 
 @dataclass(frozen=True)
@@ -30,44 +21,81 @@ class SolveFailedError(RuntimeError):
     pass
 
 
+class InfeasibleLpError(SolveFailedError):
+    pass
+
+
+class UnboundedLpError(SolveFailedError):
+    pass
+
+
+class SimplexCyclingError(SolveFailedError):
+    pass
+
+
+class IterationLimitError(SolveFailedError):
+    pass
+
+
 MIN_CYCLE_LEN = 2
 OBJECTIVE_IMPROVEMENT_TOL = 1e-9
 
 
-class Solver:
-    def __init__(
-        self,
-        pivoting_strategy: pivoting_strategy.PivotingStrategy,
-        max_iterations: int = 100,
-    ) -> None:
-        self.pivoting_strategy_ = pivoting_strategy
-        self.basis_history_: list[tuple[np.integer, ...]] = []
-        self.objective_history_: list[float] = []
-        self.max_iter_ = max_iterations
+class SolveHistory:
+    def __init__(self) -> None:
+        self.basis_: list[tuple[int, ...]] = []
+        self.objective_: list[float] = []
+        self.basis_cycle_: set[tuple[int, ...]] = set()
 
-    def _is_cycling(
-        self,
-        current_basis: jaxtyping.Int[ArrayI, " m"],
-    ) -> bool:
-        """Checks for cycling in the simplex algorithm."""
-        if len(self.objective_history_) < MIN_CYCLE_LEN:
-            return False
+    @property
+    def basis_history(self) -> list[tuple[int, ...]]:
+        return self.basis_
+
+    @property
+    def objective_history(self) -> list[float]:
+        return self.objective_
+
+    def update(
+        self, basis: jaxtyping.Int[ArrayI, " m"], objective_value: float
+    ) -> None:
+        self.objective_.append(objective_value)
 
         if (
-            abs(self.objective_history_[-1] - self.objective_history_[-2])
+            len(self.objective_) > 1
+            and abs(self.objective_[-1] - self.objective_[-2])
             > OBJECTIVE_IMPROVEMENT_TOL
         ):
             # If the objective improved, we are not cycling, so we can clear the history.
-            self.basis_history_.clear()
-            return False
+            self.basis_cycle_.clear()
 
-        # A cycle can only occur with degenerate pivots (no change in objective)
-        basis_signature = tuple(sorted(current_basis))
-        if basis_signature in self.basis_history_:
-            return True
+        basis_signature = tuple(int(b) for b in sorted(basis))
+        self.basis_.append(basis_signature)
 
-        self.basis_history_.append(basis_signature)
-        return False
+        if basis_signature in self.basis_cycle_:
+            raise SimplexCyclingError(
+                f"Basis cycle of length {len(self.basis_cycle_)} detected: {self.basis_cycle_}"
+            )
+        self.basis_cycle_.add(basis_signature)
+
+
+class Solver:
+    pivoting_strategy_: pivoting_strategy.PivotingStrategy
+    solve_history_: SolveHistory
+
+    def __init__(
+        self,
+        pivot_strategy: pivoting_strategy.PivotingStrategy | None = None,
+    ) -> None:
+        if pivot_strategy is not None:
+            self.pivoting_strategy_ = pivot_strategy
+        else:
+            self.pivoting_strategy_ = pivoting_strategy.SmallestSubscriptRule()
+
+        self.solve_history_ = SolveHistory()
+
+    @property
+    def history(self) -> SolveHistory:
+        return self.solve_history_
 
     def find_initial_basis(
         self,
@@ -111,24 +139,26 @@ class Solver:
         return SolveResult(
             basis=basis,
             solution=solution,
-            objective_value=self.objective_history_[-1],
+            objective_value=self.solve_history_.objective_history[-1],
         )
 
     def solve(
         self,
         problem: lp_problem.LpProblem,
+        max_iterations: int = 100,
         initial_basis: jaxtyping.Int[ArrayI, " m"] | None = None,
-    ) -> tuple[
-        SolverStatus,
-        SolveResult | None,
-    ]:
+    ) -> SolveResult:
+        self.solve_history_ = SolveHistory()
+
         if initial_basis is not None:
             basis = np.array(initial_basis)
         else:
             try:
                 basis = self.find_initial_basis(problem)
-            except SolveFailedError:
-                return (SolverStatus.INFEASIBLE, None)
+            except SolveFailedError as e:
+                raise InfeasibleLpError(
+                    "Failed to find an initial simplex basis"
+                ) from e
 
         inv_basis_matrix = np.linalg.inv(problem.constraint_matrix[:, basis])
 
@@ -137,11 +167,12 @@ class Solver:
         x_basis = inv_basis_matrix @ problem.rhs
 
         logger.info("Starting simplex algorithm...")
+        self.solve_history_.update(basis, float(problem.objective[basis] @ x_basis))
+        logger.info(
+            f"Initial objective value {self.solve_history_.objective_history[-1]}"
+        )
 
-        self.basis_history_ = []  # Used to check for cycling, only degenerate steps are recorded.
-        self.objective_history_ = [float(problem.objective[basis] @ x_basis)]
-
-        for iteration in range(1, self.max_iter_):
+        for iteration in range(1, max_iterations):
             non_basic_vars = np.array(
                 [i for i in range(problem.num_variables) if i not in set(basis)]
             )
@@ -155,9 +186,7 @@ class Solver:
                 logger.info(
                     f"Simplex algorithm finished after {iteration - 1} iterations."
                 )
-                return SolverStatus.SUCCESS, self._finalize_result(
-                    problem, basis, x_basis
-                )
+                return self._finalize_result(problem, basis, x_basis)
 
             # Step 2: Determine the entering variable
             entering_variable: int = self.pivoting_strategy_.pick_entering_index(
@@ -168,7 +197,7 @@ class Solver:
             d = inv_basis_matrix @ problem.constraint_matrix[:, entering_variable]
 
             if np.all(d <= 0):
-                return SolverStatus.UNBOUNDED, None
+                raise UnboundedLpError
 
             # Step 3: Determine the exiting variable
             basic_exiting_index = self.pivoting_strategy_.pick_exiting_index(
@@ -178,7 +207,7 @@ class Solver:
 
             # Step 4: Update the inverse of the basis matrix (feel free to change input args to update_inverse if desirable)
             basis[basic_exiting_index] = entering_variable
-            inv_basis_matrix = math.update_inverse(
+            inv_basis_matrix = linear_algebra.update_inverse(
                 problem.constraint_matrix,
                 inv_basis_matrix,
                 entering_variable,
@@ -191,19 +220,15 @@ class Solver:
             x_basis -= x_entering * d
             x_basis[basic_exiting_index] = x_entering
 
-            self.objective_history_.append(float(problem.objective[basis] @ x_basis))
-
+            self.solve_history_.update(basis, float(problem.objective[basis] @ x_basis))
             logger.info(
                 f"Iteration {iteration} ::: "
                 f"Entering variable: {entering_variable}, "
                 f"Exiting variable: {exiting_variable}, "
-                f"Objective: {self.objective_history_[-1]}"
+                f"Objective: {self.solve_history_.objective_history[-1]}"
             )
 
-            if self._is_cycling(basis):
-                return SolverStatus.CYCLING, None
-
         logger.info(
-            f"Simplex algorithm terminated due to {self.max_iter_} iteration limit"
+            f"Simplex algorithm terminated due to {max_iterations} iteration limit"
         )
-        return SolverStatus.ITERATION_LIMIT, None
+        raise IterationLimitError
