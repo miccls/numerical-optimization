@@ -76,7 +76,7 @@ def update_inverse_gaussian(
     ```
     Q * B^-1 * B_new = I,
     ```
-    thus, Q * B^-1 = B_new^-1.
+    thus, `Q * B^-1 = B_new^-1`.
 
     For efficiency, it suffices to just compute d_l (basic direction of entering variable)
     to determine the necessary row operations. 
