@@ -39,7 +39,7 @@ def update_inverse(
         exiting_index: index of the column in the basis matrix that should be replaced.
 
     Returns:
-        inverse of the updated basis matrix, B_new^-1.
+        inverse of the updated basis matrix, `B_new^-1`.
     """
 
     # O(m^2)
@@ -65,20 +65,20 @@ def update_inverse_gaussian(
     ```
     B_new = [A_B(1), A_B(2), ... , A_l, ...  A_B(m).
     ```
-    where l is the entering index.
+    where `l` is the entering index.
     To find the inverse of this matrix, we compute the product between this matrix
     and the old inverse
     ```
     B^-1 * B_new = [e_1, ...  d_l, e_m]
     ```
-    If we now perform a set of row operations, Q, to turn the l:th
-    into the l:th unit vector, we obtain the identity matrix,
+    If we now perform a set of row operations, `Q`, to turn the `l`th
+    into the `l`th unit vector, we obtain the identity matrix,
     ```
     Q * B^-1 * B_new = I,
     ```
     thus, `Q * B^-1 = B_new^-1`.
 
-    For efficiency, it suffices to just compute d_l (basic direction of entering variable)
+    For efficiency, it suffices to just compute `d_l` (basic direction of entering variable)
     to determine the necessary row operations. 
    
     Approximate time consumption on Optdev's Dell machines:  4.0 ms
@@ -90,7 +90,7 @@ def update_inverse_gaussian(
         exiting_index: index of the column in the basis matrix that should be replaced.
 
     Returns:
-        inverse of the updated basis matrix, B_new^-1.
+        inverse of the updated basis matrix, `B_new^-1`.
 
     """
     # O(m^2)
