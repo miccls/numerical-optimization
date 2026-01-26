@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from common.numpy_type_aliases import ArrayI
-from simplex_solutions import linear_algebra, lp_problem, pivoting_strategy, solver
+from simplex import linear_algebra, lp_problem, pivoting_strategy, solver
 
 if TYPE_CHECKING:
     from common.numpy_type_aliases import ArrayF
