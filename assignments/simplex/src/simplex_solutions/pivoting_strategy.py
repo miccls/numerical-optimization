@@ -1,69 +1,118 @@
-from typing import Protocol
+from abc import ABC, abstractmethod
+from typing import override
+
+import jaxtyping
 import numpy as np
 
-from jaxtyping import Float
+from common.numpy_type_aliases import ArrayF, ArrayI
 
-class PivotingStrategy(Protocol):
-    def pick_entering_index(self, reduced_costs: Float[np.ndarray, "non_basic_vars"], non_basic_vars: list[int]) -> int:
-        # Used as model
-        pass
 
-    def pick_exiting_index(self, distance_to_boundary: Float[np.ndarray, "basic_vars"]) -> int:
-        # Used as model
-        pass
-
-class SmallestSubscriptRule:
-    """
-    Implements Bland's Rule:
-    When multiple choices are available, always choose the variable 
-    with the smallest index (subscript) to prevent cycling.
-    """
-    
-    # Tolerance for floating point comparisons
-    EPSILON = 1e-9
-
-    @staticmethod
+class PivotingStrategy(ABC):
+    @abstractmethod
     def pick_entering_index(
-        reduced_costs: Float[np.ndarray, "non_basic_vars"], 
-        non_basic_vars: list[int]
+        self,
+        reduced_costs: jaxtyping.Float[ArrayF, " num_nonbasic"],
+        non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
     ) -> int:
         """
-        Returns the variable ID (subscript) of the entering variable.
-        Among all variables with non positive reduced cost, the entering will be the one
-        with the smallest subscript.
+        Selects the variable that should enter the basis.
+
+        Args:
+            reduced_costs: reduced costs
+            non_basic_vars: variable indices of the non basic variables, assumed to be sorted
+        Returns:
+            The variable index, i.e. an element of the array `non_basic_vars`, of a variable that should enter the basis.
         """
-        candidate_mask = reduced_costs < -SmallestSubscriptRule.EPSILON
-        if not np.any(candidate_mask):
-            raise RuntimeError("Expects some negative reduced costs.")
+        ...
 
-        candidates = np.array(non_basic_vars)[candidate_mask]
-        return int(np.min(candidates))
-
-    @staticmethod
+    @abstractmethod
     def pick_exiting_index(
-        ratios: Float[np.ndarray, "constraints"], 
-        u: Float[np.ndarray, "constraints"], 
-        basic_vars: list[int]
+        self,
+        basis: jaxtyping.Int[ArrayI, " m"],
+        x_basis: jaxtyping.Float[ArrayF, " m"],
+        basic_direction: jaxtyping.Float[ArrayF, " m"],
     ) -> int:
         """
-        Returns the variable ID of the exiting variable.
-        Among the variables which allow the smallest change for the entering variable,
-        the one with the smallest subscript will be chosen.
+        Selects the index exiting the basis.
+
+        If we compare the arguments with "Numerical Optimization", Nocedal & Wright, page 370,
+        we can make the following identifications:
+
+        `x_basis[p]` is the value for the decision variable `x_k`, where `k=basis[p]`.
+
+        `basic_direction` is `d`, with `d = B^-1 * A_q`, where B is the basis matrix `A[:, basis]`,
+        and `A_q = A[:, q]` is the column of the constraint matrix for the entering variable `x_q`.
+
+        Args:
+            basis: Variable indices for the basic variables.
+            x_basis: Values for the basic variables.
+            basic_direction: The basic direction for the entering variable.
+
+        Returns:
+            Index `p` in ``basis`` array for the decision variable that should be removed from the basis.
         """
-        valid_pivot_mask = u > SmallestSubscriptRule.EPSILON
-        
-        if not np.any(valid_pivot_mask):
-            # If no u > 0, the problem is unbounded
-            raise RuntimeError("No valid pivot found (Problem is Unbounded).")
+        ...
 
-        # Filter to only valid pivots
-        valid_ratios = ratios[valid_pivot_mask]
-        valid_basic_vars = np.array(basic_vars)[valid_pivot_mask]
 
-        min_ratio = np.min(valid_ratios)
-        
-        # Find all basic variables that correspond to the minimum ratio
-        min_ratio_candidates = valid_basic_vars[np.isclose(valid_ratios, min_ratio)]
-        
-        # Of those, pick the one with the smallest index
-        return int(np.min(min_ratio_candidates))
+def index_of_smallest_ratio(
+    basis: jaxtyping.Int[ArrayI, " m"],
+    x_basis: jaxtyping.Float[ArrayF, " m"],
+    basic_direction: jaxtyping.Float[ArrayF, " m"],
+) -> int:
+    """
+    Args:
+        basis: Variable indices for the basic variables.
+        x_basis: Values for the basic variables.
+        basic_direction: The basic direction for the entering variable.
+
+    Returns:
+        Index `i` in `basis` array with the smallest positive ratio `x_basis[i] / basic_direction[i]`,
+        choosing the index corresponding to the lowest variable index `basis[i]` in case of ties.
+    """
+
+    smallest_ratio_with_smallest_var_index = min(
+        (x_basis[i] / basic_direction[i], basis[i], i)
+        for i in range(len(x_basis))
+        if basic_direction[i] > 0
+    )
+
+    return smallest_ratio_with_smallest_var_index[2]
+
+
+class BlandsRule(PivotingStrategy):
+    @override
+    def pick_entering_index(
+        self,
+        reduced_costs: jaxtyping.Float[ArrayF, " num_nonbasic"],
+        non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
+    ) -> int:
+        return int(non_basic_vars[reduced_costs < 0].min())
+
+    @override
+    def pick_exiting_index(
+        self,
+        basis: jaxtyping.Int[ArrayI, " m"],
+        x_basis: jaxtyping.Float[ArrayF, " m"],
+        basic_direction: jaxtyping.Float[ArrayF, " m"],
+    ) -> int:
+        return index_of_smallest_ratio(basis, x_basis, basic_direction)
+
+
+class DantzigsRule(PivotingStrategy):
+    @override
+    def pick_entering_index(
+        self,
+        reduced_costs: jaxtyping.Float[ArrayF, " num_nonbasic"],
+        non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
+    ) -> int:
+        # non_basic_vars are sorted in my implementation
+        return int(non_basic_vars[np.argmin(reduced_costs)])
+
+    @override
+    def pick_exiting_index(
+        self,
+        basis: jaxtyping.Int[ArrayI, " m"],
+        x_basis: jaxtyping.Float[ArrayF, " m"],
+        basic_direction: jaxtyping.Float[ArrayF, " m"],
+    ) -> int:
+        return index_of_smallest_ratio(basis, x_basis, basic_direction)

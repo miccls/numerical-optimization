@@ -1,149 +1,168 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
-from enum import Enum
-from typing import Optional, Tuple
+from enum import StrEnum
 
+import jaxtyping  # noqa: TC002
 import numpy as np
-from jaxtyping import Float
 
-from . import lp_problem, math, pivoting_strategy
+from simplex import lp_problem, math, pivoting_strategy
 
-class SolverStatus(Enum):
-    SUCCESS = 0
-    INFEASIBLE = 1
-    UBOUNDED = 2
-    CYCLING = 3
-    
-    def __str__(self):
-        return self.name
+logger = logging.getLogger(__name__)
 
-@dataclass
+
+class SolverStatus(StrEnum):
+    SUCCESS = "Success"
+    INFEASIBLE = "Infeasible"
+    UNBOUNDED = "Unbounded"
+    CYCLING = "Cycling"
+
+
+@dataclass(frozen=True)
+class SolveResult:
+    basis: jaxtyping.Float[np.ndarray, " m"]
+    solution: jaxtyping.Float[np.ndarray, " n"]
+    objective_value: float
+
+
+class SolveFailedError(RuntimeError):
+    pass
+
+
+MIN_CYCLE_LEN = 2
+OBJECTIVE_IMPROVEMENT_TOL = 1e-9
+
+
 class Solver:
-    pivoting_strategy_: pivoting_strategy.PivotingStrategy
-
-    def _check_cycling(
+    def __init__(
         self,
-        objective_history: list[float],
-        basis_history: list[tuple[int, ...]],
-        current_basis: list[int],
-    ) -> Optional[SolverStatus]:
+        pivoting_strategy: pivoting_strategy.PivotingStrategy,
+        max_iterations: int = 100,
+    ) -> None:
+        self.pivoting_strategy_ = pivoting_strategy
+        self.basis_history_: list[tuple[int, ...]] = []
+        self.objective_history_: list[float] = []
+        self.max_iter_ = max_iterations
+
+    def _is_cycling(
+        self,
+        current_basis: jaxtyping.Int[np.ndarray, " m"],
+    ) -> bool:
         """Checks for cycling in the simplex algorithm."""
-        if len(objective_history) < 2:
-            return None
+        if len(self.objective_history_) < MIN_CYCLE_LEN:
+            return False
+
+        if (
+            abs(self.objective_history_[-1] - self.objective_history_[-2])
+            > OBJECTIVE_IMPROVEMENT_TOL
+        ):
+            # If the objective improved, we are not cycling, so we can clear the history.
+            self.basis_history_.clear()
+            return False
 
         # A cycle can only occur with degenerate pivots (no change in objective)
-        if abs(objective_history[-1] - objective_history[-2]) < 1e-9:
-            basis_signature = tuple(sorted(current_basis))
-            if basis_signature in basis_history:
-                return SolverStatus.CYCLING
-            basis_history.append(basis_signature)
-        else:
-            # If the objective improved, we are not cycling, so we can clear the history.
-            basis_history.clear()
-        
-        return None
+        basis_signature = tuple(sorted(current_basis))
+        if basis_signature in self.basis_history_:
+            return True
+
+        self.basis_history_.append(basis_signature)
+        return False
 
     def find_basic_feasible_solution(
         self,
         problem: lp_problem.LpProblem,
-    ) -> Tuple[SolverStatus, Optional[list[int]]]:
+    ) -> jaxtyping.Int[np.ndarray, " n"]:
         """
-        Finds a basic feasible solution by solving an auxiliary LP.
+        Finds a basic feasible solution by solving an auxiliary LP. Throw a SolveFailedError if it fails.
         """
-        # TODO: Set up an auxiliary LP whose solution is a basic feasible solution to the original problem
+        # TODO(you): Set up an auxiliary LP whose solution is a basic feasible solution to the original problem
         # See page 378 in the book, for example.
-        pass
+        return np.zeros(problem.objective.shape, dtype=int)
 
     def solve(
         self,
         problem: lp_problem.LpProblem,
-        B: Optional[list[int]] = None,
-        log: bool = False,
-    ) -> Tuple[
+        initial_basis: jaxtyping.Int[np.ndarray, " m"] | None = None,
+    ) -> tuple[
         SolverStatus,
-        Tuple[
-            Optional[list[int]],
-            Optional[list[float]],
-            Optional[float],
-        ],
+        SolveResult | None,
     ]:
-        if B is None:
-            status, B = self.find_basic_feasible_solution(problem)
-            if status == SolverStatus.INFEASIBLE:
-                return status, (None, None, None)
+        if initial_basis is not None:
+            basis = np.array(initial_basis)
+        else:
+            try:
+                basis = self.find_basic_feasible_solution(problem)
+            except SolveFailedError:
+                return (SolverStatus.INFEASIBLE, None)
 
-        assert B is not None  # for type checkers
-
-        A: Float[np.ndarray, "constraints variables"] = problem.constraint_matrix
-        c: Float[np.ndarray, "variables"] = problem.objective
-        
-        # Binv is the inverse of the Basis matrix (subset of columns of A)
-        Binv: Float[np.ndarray, "constraints constraints"] = np.linalg.inv(A[:, B])
-        
+        inv_basis_matrix: jaxtyping.Float[np.ndarray, "m m"] = np.linalg.inv(
+            problem.constraint_matrix[:, basis]
+        )
         # x_basis is the values of the basic variables
-        x_basis: Float[np.ndarray, "constraints"] = [] # TODO
+        # TODO(you): set the correct values for x_basis here
+        x_basis: jaxtyping.Float[np.ndarray, " m"] = np.zeros(0)
 
-        if log:
-            print("Starting simplex algorithm...")
+        logger.info("Starting simplex algorithm...")
 
-        basis_history: list[tuple[int, ...]] = [] # Used to check for cycling, only degenerate steps are recorded.
-        objective_history: list[float] = [c[B] @ x_basis]
-        iteration: int = 1
-        while True:
-            
+        self.basis_history_ = []  # Used to check for cycling, only degenerate steps are recorded.
+        self.objective_history_ = [problem.objective[basis] @ x_basis]
+
+        for iteration in range(1, self.max_iter_):
             # Step 1: Compute reduced costs
-            reduced_costs = []
-
+            # TODO(you): set to the correct reduced costs
+            reduced_costs: jaxtyping.Float[np.ndarray, " n-m"] = np.zeros(0)
             if np.all(reduced_costs >= 0):
-                status = SolverStatus.SUCCESS
                 break
 
             # Step 2: Determine the entering variable
             entering_variable: int = self.pivoting_strategy_.pick_entering_index()
-            
+
             # d is the "basic direction" of the entering variable
-            d: Float[np.ndarray, "constraints"] = Binv @ A[:, entering_variable]
-            
+            d: jaxtyping.Float[np.ndarray, " m"] = (
+                inv_basis_matrix @ problem.constraint_matrix[:, entering_variable]
+            )
+
             if np.all(d <= 0):
-                status = SolverStatus.UBOUNDED
-                break
+                return (SolverStatus.UNBOUNDED, None)
 
             # Step 3: Determine the exiting variable
-            exiting_variable = self.pivoting_strategy_.pick_exiting_index()
-   
+            basic_exiting_index = self.pivoting_strategy_.pick_exiting_index()
+            exiting_variable = basis[basic_exiting_index]
+
             # Step 4: Update the inverse of the basis matrix (feel free to change input args to update_inverse if desirable)
-            basic_exiting_index = B.index(exiting_variable) 
-            B[basic_exiting_index] = entering_variable
-            Binv = math.update_inverse(A, Binv, entering_variable, basic_exiting_index) # <-- TODO in here.
+            basis[basic_exiting_index] = entering_variable
+            inv_basis_matrix = math.update_inverse(
+                problem.constraint_matrix,
+                inv_basis_matrix,
+                entering_variable,
+                basic_exiting_index,
+            )  # <-- TODO in here.
 
             # Step 5: Update the basic solution from the basic direction
-            # TODO...
+            # TODO(you): ...
 
-            objective_history.append(c[B] @ x_basis)
-            status = self._check_cycling(objective_history, basis_history, B)
-            if status == SolverStatus.CYCLING:
-                break
+            self.objective_history_.append(problem.objective[basis] @ x_basis)
 
-            if log:
-                print(
-                    f"Iteration {iteration} ::: "
-                    f"Leaving index: {exiting_variable}, "
-                    f"Entering index: {entering_variable}, "
-                    f"Objective: {c[B] @ x_basis}"
-                )
-                
-            iteration += 1
+            logger.info(
+                f"Iteration {iteration} ::: "
+                f"Leaving index: {exiting_variable}, "
+                f"Entering index: {entering_variable}, "
+                f"Objective: {self.objective_history_[-1]}"
+            )
 
-        if log:
-            print(f"Simplex algorithm terminated after {iteration} iterations.")
+            if self._is_cycling(basis):
+                return SolverStatus.CYCLING, None
 
-        if status == SolverStatus.SUCCESS:
-            solution: list[float] = [
-                float(x_basis[B.index(i)]) if i in B else 0.0
-                for i in range(problem.variables)
-            ]
-            objective_value: float = float(c[B] @ x_basis)
-            return status, (B, solution, objective_value)
+        logger.info(
+            f"Simplex algorithm terminated after {len(self.objective_history_) - 1} iterations."
+        )
 
-        return status, (None, None, None)
+        solution = np.zeros(problem.num_variables)
+        solution[basis] = x_basis
+
+        return SolverStatus.SUCCESS, SolveResult(
+            basis=basis,
+            solution=solution,
+            objective_value=self.objective_history_[-1],
+        )

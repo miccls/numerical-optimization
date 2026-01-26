@@ -1,12 +1,13 @@
+import jaxtyping
 import numpy as np
-from jaxtyping import Float
+
 
 def update_inverse(
-        A: Float[np.ndarray, "constraints variables"], 
-        Binv: Float[np.ndarray, "constraints constraints"], 
-        entering_variable: int, 
-        exiting_index: int
-        ) -> Float[np.ndarray, "constraints constraints"]:
-    # TODO: Implement a numerically efficient way to calculate the inverse
-    #       of the new basis matrix after performing a pivot.
-    pass
+    a: jaxtyping.Float[np.ndarray, "m n"],
+    b_inv: jaxtyping.Float[np.ndarray, "m m"],
+    entering_variable: int,
+    exiting_index: int,
+) -> jaxtyping.Float[np.ndarray, "m m"]:
+    # TODO(you): Implement a numerically efficient way to calculate the inverse
+    # of the new basis matrix after performing a pivot.
+    return np.array([])

@@ -4,8 +4,8 @@
 
 Welcome to the Simplex Algorithm programming assignment! The goal of this assignment is to implement a robust version of the revised simplex method for solving linear programming problems on standard form:
 
-Minimize: `c^T * x`
-Subject to: `A * x = b`, `x >= 0`
+Minimize `c^T * x`,
+subject to `A * x = b`, `x >= 0.`
 
 You will be filling in the core components of the algorithm, including the logic for updating the basis inverse, implementing a pivoting strategy, and orchestrating the main solver loop.
 All necessary information and math can be found in chapter 13, *Linear Programming: The Simplex Algorithm*, of the book.
@@ -14,54 +14,50 @@ All necessary information and math can be found in chapter 13, *Linear Programmi
 
 The project is organized into two main packages:
 
--   `src/simplex`: This is your workspace. You will find skeleton files with `TODO` markers indicating where you need to write your implementation.
--   `src/simplex_solutions`: This directory contains a complete, working reference implementation of the algorithm. It's there for you to consult if you get stuck or want to compare your approach. I am happy to take suggestions of improvemnts if you disapprove of my implementation.
+- `src/simplex`: This is your workspace. You will find skeleton files with `TODO` markers indicating where you need to write your implementation.
+- `src/simplex_solutions`: This directory contains a complete, working reference implementation of the algorithm. It's there for you to consult if you get stuck or want to compare your approach. I am happy to take suggestions of improvements if you disapprove of my implementation.
 
 The tests are designed to work with your code in `src/simplex` as you complete the `TODO`s.
 
 ## Setup
 
-To get started, you need to set up a virtual environment and install the project dependencies.
+To get started, you need [uv](https://docs.astral.sh/uv/getting-started/) installed.
 
-1.  **Create a virtual environment:**
+1. **Create a virtual environment:**
     From the `assignments/simplex` directory, run:
+
     ```bash
-    python3 -m venv .venv
+    uv sync
     ```
 
-2.  **Activate the environment:**
-        ```bash
-        .\.venv\Scripts\activate
-        ```
+    This will create a `.venv` directory with all the dependencies installed.
 
-3.  **Install dependencies:**
-    Install the project in "editable" mode. This will install the required libraries (like `numpy`) and make your `simplex` package importable.
-    ```bash
-    pip install -e .
-    ```
+2. **Open project and select the virtual environment in VSCode**
+    Open the folder `assignments/simplex` in VSCode.
+    Select interpreter and chose python in the `.venv`.
 
 ## Your Task
 
 Your task is to complete the implementation in the `src/simplex` directory. Look for the `TODO` comments in the following files:
 
-#### `math.py`
+### `math.py`
 
--   **`update_inverse`**: Implement a numerically efficient method to update the inverse of the basis matrix (`Binv`) after a pivot operation. This is a core component of the revised simplex method.
+- **`update_inverse`**: Implement a numerically efficient method to update the inverse of the basis matrix (`Binv`) after a pivot operation. This is a core component of the revised simplex method.
 
-#### `pivoting_strategy.py`
+### `pivoting_strategy.py`
 
--   **`MyPivotStrategy`**: Implement a pivoting strategy that guarantees finite termination. You will need to implement:
-    -   `pick_entering_index`: Choose a variable to enter the basis from the non-basic variables with negative reduced costs.
-    -   `pick_exiting_index`: Choose a variable to leave the basis by applying the ratio test.
+- **`MyPivotStrategy`**: Implement a pivoting strategy that guarantees finite termination. You will need to implement:
+  - `pick_entering_index`: Choose a variable to enter the basis from the non-basic variables with negative reduced costs.
+  - `pick_exiting_index`: Choose a variable to leave the basis by applying the ratio test.
 
-#### `solver.py`
+### `solver.py`
 
--   **`find_basic_feasible_solution`**: Implement the logic for Phase I of the simplex method. This involves setting up and solving an auxiliary linear program to find an initial basic feasible solution for the original problem.
--   **`solve`**: Complete the main solver loop. This involves:
-    1.  Calculating the reduced costs for non-basic variables.
-    2.  Using your pivoting strategy to select entering and exiting variables.
-    3.  Updating the basis inverse using your `update_inverse` function.
-    4.  Updating the basic solution `x_basis`.
+- **`find_basic_feasible_solution`**: Implement the logic for Phase I of the simplex method. This involves setting up and solving an auxiliary linear program to find an initial basic feasible solution for the original problem.
+- **`solve`**: Complete the main solver loop. This involves:
+    1. Calculating the reduced costs for non-basic variables.
+    2. Using your pivoting strategy to select entering and exiting variables.
+    3. Updating the basis inverse using your `update_inverse` function.
+    4. Updating the basic solution `x_basis`.
 
 ## Running the Tests
 
@@ -70,7 +66,7 @@ A test suite is provided in the `tests/` directory to help you verify your imple
 To run the tests, make sure your virtual environment is activated and run the following command from the `assignments/simplex` directory:
 
 ```bash
-python3 -m unittest discover tests
+pytest .
 ```
 
 or use the test GUI in VSCode.
