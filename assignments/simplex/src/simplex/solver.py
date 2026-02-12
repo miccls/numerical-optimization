@@ -5,7 +5,7 @@ import jaxtyping
 import numpy as np
 
 from common.numpy_type_aliases import ArrayF, ArrayI
-from simplex_solutions import linear_algebra, lp_problem, pivoting_strategy
+from simplex import linear_algebra, lp_problem, pivoting_strategy
 
 logger = logging.getLogger(__name__)
 
@@ -139,7 +139,7 @@ class Solver:
         phase_one_result = phase_one_solver.solve(
             phase_one_problem,
             # TODO(you): What is valid starting basis for the Phase 1 problem?
-            initial_basis=np.zeros(num_constraints),
+            initial_basis=np.zeros(num_constraints, dtype=int),
         )
         if phase_one_result.objective_value > OPTIMALITY_TOL:
             raise SolveFailedError(
@@ -151,11 +151,10 @@ class Solver:
             f"Found starting basis {phase_one_result.basis if len(phase_one_result.basis) < max_print_size else ''}"
         )
 
-        # TODO(you):
-        # The final basis could contain some of the auxiliary variables introduced in Phase 1.
+        # TODO(you): The final basis could contain some of the auxiliary variables introduced in Phase 1.
         # Two possible choices to solve this are:
         # 1. Perform pivots on all auxiliary variables in the basis with original variables entering.
-        # 2. Return the basis as is, and augment the original problem to include the auxiliary variables 
+        # 2. Return the basis as is, and augment the original problem to include the auxiliary variables
         #    as well, but with the additional constraints 0 < z < 0.
 
         return phase_one_result.basis

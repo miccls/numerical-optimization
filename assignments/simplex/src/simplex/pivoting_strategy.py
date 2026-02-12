@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import override
 
 import jaxtyping
-import numpy as np
 
 from common.numpy_type_aliases import ArrayF, ArrayI
 
@@ -60,7 +59,7 @@ class BlandsRule(PivotingStrategy):
         reduced_costs: jaxtyping.Float[ArrayF, " num_nonbasic"],
         non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
     ) -> int:
-        # TODO: you
+        # TODO(you): Pick entering index according to Bland's rule.
         return -1
 
     @override
@@ -70,7 +69,7 @@ class BlandsRule(PivotingStrategy):
         x_basis: jaxtyping.Float[ArrayF, " m"],
         basic_direction: jaxtyping.Float[ArrayF, " m"],
     ) -> int:
-        # TODO: you
+        # TODO(you): Pick exiting index according to Bland's rule.
         return -1
 
 
@@ -81,7 +80,7 @@ class DantzigsRule(PivotingStrategy):
         reduced_costs: jaxtyping.Float[ArrayF, " num_nonbasic"],
         non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
     ) -> int:
-        # TODO: you
+        # TODO(you): Pick entering index according to Dantzig's rule.
         return -1
 
     @override
@@ -91,5 +90,5 @@ class DantzigsRule(PivotingStrategy):
         x_basis: jaxtyping.Float[ArrayF, " m"],
         basic_direction: jaxtyping.Float[ArrayF, " m"],
     ) -> int:
-        # TODO: you
+        # TODO(you): Pick exiting index according to Dantzig's rule.
         return -1

@@ -1,5 +1,4 @@
 from jaxtyping import install_import_hook
-from simplex import linear_algebra
 
 # Adds jaxtyping decorators, see https://docs.kidger.site/jaxtyping/api/runtime-type-checking/#jaxtyping.install_import_hook
 with install_import_hook("simplex", "beartype.beartype"):
