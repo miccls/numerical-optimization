@@ -50,12 +50,13 @@ def update_inverse(
     # O(m^2)
     return b_inv - ((-v + d) @ b_inv[[exiting_index], :]) / np.float64(d[exiting_index])
 
+
 def update_inverse_gaussian(
-        a: jaxtyping.Float[ArrayF, "m n"], 
-        b_inv: jaxtyping.Float[ArrayF, "m m"], 
-        entering_variable: int, 
-        exiting_index: int
-        ) -> jaxtyping.Float[ArrayF, "m m"]:
+    a: jaxtyping.Float[ArrayF, "m n"],
+    b_inv: jaxtyping.Float[ArrayF, "m m"],
+    entering_variable: int,
+    exiting_index: int,
+) -> jaxtyping.Float[ArrayF, "m m"]:
     """
     Computes `B_new^-1` where `B_new` is formed by replacing column `exiting_index`
     in the matrix `B` with the column `A[:, entering_variable]`.
@@ -79,10 +80,10 @@ def update_inverse_gaussian(
     thus, `Q * B^-1 = B_new^-1`.
 
     For efficiency, it suffices to just compute `d_l` (basic direction of entering variable)
-    to determine the necessary row operations. 
-   
+    to determine the necessary row operations.
+
     Approximate time consumption on Optdev's Dell machines:  4.0 ms
-    
+
     Args:
         a: constraint matrix.
         b_inv: inverse of the current basis matrix.
@@ -97,6 +98,11 @@ def update_inverse_gaussian(
     d = b_inv @ a[:, [entering_variable]]
     dl = d[exiting_index]
     rowl = b_inv[exiting_index]
-    
-    # O(m^2) 
-    return np.array([row - (rowl * d[i]/dl) if i != exiting_index else row / dl for i, row in enumerate(b_inv)])
+
+    # O(m^2)
+    return np.array(
+        [
+            row - (rowl * d[i] / dl) if i != exiting_index else row / dl
+            for i, row in enumerate(b_inv)
+        ]
+    )
