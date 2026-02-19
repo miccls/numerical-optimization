@@ -1,0 +1,125 @@
+\section{Linear Programming: Interior-Point Methods}
+
+In section 14.1, the authors outline the theoretical foundations of primal-dual path following interior point algorithms.
+They introduce the duality measure
+\[
+    \mu := \frac{x^Ts}{n}
+\] 
+and derive an algorithm whose iterates are feasible solutions to the problem, reducing the duality measure.
+In other sources, \textit{Introduction to Linear Optimization}, they relate this method with adding a barrier penalty to the objective.
+Cover this in more detail here.
+
+\subsection{Sets}
+The book introduces a number of sets important to the analysis and design of IPMs.
+We repeat their definitions here
+
+Feasible set:
+\begin{equation}
+        \mathcal{F} = \{ (x, \lambda, s) | Ax = b, A^T \lambda + s = c, (x, s) \geq 0 \}
+\end{equation}
+
+Strictly feasible set:
+\begin{equation}
+    \mathcal{F}^\mathit{0} = \{ (x, \lambda, s) | Ax = b, A^T \lambda + s = c, (x, s) > 0 \}
+\end{equation}
+
+The set of points, $(x_\tau, \lambda_\tau, s_\tau)$, which satisfy the following equations,
+\begin{align*}
+    A^T\lambda + s &= c\\
+    Ax &= b\\
+    x_i s_i = \tau, \quad \forall 1, \dots, n
+\end{align*}
+make up the central path, 
+\begin{equation}
+    \mathcal{C} = \{ (x_\tau, \lambda_\tau, s_\tau | \tau > 0) \}
+\end{equation}
+
+Finally, two neighborhoods of the central path are introduced
+\begin{equation}
+    \mathcal{N}_2(\theta) =  \{ (x, \lambda, s) \in \mathcal{F}^\mathit{0} \quad | \quad \| XSe - \mu e \|_2 \leq \theta \mu \}
+    \label{eq:ipm_set_n2}
+\end{equation}
+\begin{equation}
+    \mathcal{N}_{-\infty}(\gamma) =  \{ (x, \lambda, s) \in \mathcal{F}^\mathit{0} \quad | \quad x_i s_i \geq \gamma \mu \> \forall i \}
+\end{equation}
+
+\subsection{Solutions}
+The exercises chosen for this chapter are 14.1, 14.2, 14.5, 14.6
+\subsubsection{14.1}
+The system (14.4a) is the following 
+\[
+    F(x,\lambda, s) = \begin{pmatrix}
+        A^T\lambda + s - c\\
+        Ax - b\\
+        XSe
+    \end{pmatrix} = 0
+\]
+and along with the bounds, $(x, s) \geq 0$ it constitutes the KKT conditions.
+
+For our problem, we write out the above quantities explicitly
+\begin{align*}
+    A &= (1, 1)\\
+    b &= 1\\
+    c &= (1, 0)^T
+\end{align*}
+which means that 
+\[
+    F = \begin{pmatrix}
+        \lambda + s_1 - 1\\
+        \lambda + s_2\\
+        x_1 + x_2 - 1\\
+        x_1s_1\\
+        x_2s_2
+    \end{pmatrix}
+\]
+Inserting the two points listed in the exercise gives the following results
+\begin{enumerate}
+    \item[\textit{Actual Solution}: ]
+        \[
+            F = \begin{pmatrix}
+                0 + 1 - 1\\
+                0 + 0\\
+                0 + 1 - 1\\
+                0 \cdot 1\\
+                1 \cdot 0
+            \end{pmatrix} = \mathbf{0}
+        \]
+    \item[\textit{Spurious Solution}: ]
+        \[
+            F = \begin{pmatrix}
+                1 + 0 - 1\\
+                1 - 1\\
+                1 + 0 - 1\\
+                1 \cdot 0\\
+                0 \cdot -1
+            \end{pmatrix} = \mathbf{0}
+        \]
+\end{enumerate}
+
+\subsubsection{14.2}
+
+That $\mathcal{N}_2(\theta_1) \subset \mathcal{N}_2(\theta_2)$ is equivalent to saying
+
+\[
+ (x, \lambda, s) \in \mathcal{N}_2(\theta_1) \implies (x, \lambda, s) \in \mathcal{N}_2(\theta_2)
+\]
+By using \eqref{eq:ipm_set_n2}, we can translate this two
+\[
+    \| XSe - \mu e \|_2 \leq \theta_1 \mu \implies \| XSe - \mu e \|_2 \leq \theta_2 \mu
+\]
+which, of course, is only true when $\theta_1 \leq \theta_2$.
+
+We proceed similarly to show that
+\[
+ (x, \lambda, s) \in \mathcal{N}_{-\infty}(\theta_1) \implies (x, \lambda, s) \in \mathcal{N}_{-\infty}(\theta_2).
+\]
+This is equivalent to
+\[
+   x_i s_i \geq \gamma_1 \mu \implies x_i s_i \geq \gamma_2 \mu
+\]
+which can only be true if $\gamma_1 \geq \gamma_2$
+
+\subsubsection{14.5}
+
+
+\subsubsection{14.6}
