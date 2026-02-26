@@ -1,0 +1,30 @@
+[tool.uv.workspace]
+members = ["ipm", "simplex", "common"]
+
+[project]
+name = "assignments"
+version = "0.1.0"
+description = "Numerical optimization assignments"
+requires-python = ">=3.13"
+dependencies = [
+    "common",
+    "ipm",
+    "simplex",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.19.1",
+    "pytest>=9.0.2",
+    "ruff>=0.15.2",
+]
+
+[tool.uv.sources]
+common = { workspace = true }
+ipm = { workspace = true }
+simplex = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["ipm/tests", "simplex/tests"]
+addopts = "-ra -v"
+pythonpath = ["ipm/src", "simplex/src", "common/src"]

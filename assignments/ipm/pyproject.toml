@@ -1,16 +1,16 @@
 [project]
-name = "simplex"
+name = "ipm"
 version = "0.1.0"
-description = "Simplex algorithm"
+description = "Interior point method"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "beartype>=0.22.9",
-    # jaxtyping runtime type checking
     "common",
-    "jaxtyping>=0.3.5",
-    "numpy>=2.4.1",
+    "jaxtyping>=0.3.9",
+    "numpy>=2.4.2",
+    "ruff>=0.15.2",
 ]
+
 
 [build-system]
 requires = ["uv_build>=0.9.24,<0.10.0"]
@@ -24,6 +24,9 @@ test = ["pytest>=9.0.2"]
 [tool.mypy]
 strict = true
 ignore_missing_imports = true
+mypy_path = "src"
+explicit_package_bases = true
+files = ["src", "tests"]
 
 [tool.ruff]
 line-length = 88    # default in black

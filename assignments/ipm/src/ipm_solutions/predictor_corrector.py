@@ -1,0 +1,106 @@
+import logging
+
+import numpy as np
+from common import lp_problem
+
+from ipm_solutions import ipm_tools
+
+logger = logging.getLogger(__name__)
+
+
+def calculate_starting_point(
+    problem: lp_problem.LpProblem,
+) -> ipm_tools.PrimalDualTuple:
+    """Calculates a suitable starting point for the predictor corrector algorithm
+    according to the recipe on p. 410 in Nocedal & Wright"""
+    aat_inv = np.linalg.inv(problem.constraint_matrix @ problem.constraint_matrix.T)
+
+    x_tilde = problem.constraint_matrix.T @ aat_inv @ problem.rhs
+    lam_tilde = aat_inv @ problem.constraint_matrix @ problem.objective
+    s_tilde = problem.objective - problem.constraint_matrix.T @ lam_tilde
+
+    delta_x = max(0.0, -1.5 * float(np.min(x_tilde)))
+    delta_s = max(0.0, -1.5 * float(np.min(s_tilde)))
+
+    x_hat = x_tilde + delta_x * np.ones(x_tilde.shape)
+    s_hat = s_tilde + delta_s * np.ones(s_tilde.shape)
+
+    delta_x_hat = 0.5 * (x_hat.T @ s_hat) / (sum(s_hat))
+    delta_s_hat = 0.5 * (x_hat.T @ s_hat) / (sum(x_hat))
+
+    x_0 = x_hat + delta_x_hat * np.ones(x_hat.shape)
+    s_0 = s_hat + delta_s_hat * np.ones(s_hat.shape)
+    lam_0 = lam_tilde
+    return ipm_tools.PrimalDualTuple(x=x_0, lam=lam_0, s=s_0)
+
+
+def update_point(
+    point: ipm_tools.PrimalDualTuple,
+    step: ipm_tools.PrimalDualTuple,
+    primal_step_size: float,
+    dual_step_size: float,
+) -> ipm_tools.PrimalDualTuple:
+    """Updates the current solution using a primal dual step and
+    corresponding step sizes. Corresponds to the last two steps in the
+    for-loop of algorithm 14.3 on p. 411 in the book."""
+    return ipm_tools.PrimalDualTuple(
+        x=point.x + primal_step_size * step.x,
+        lam=point.lam + dual_step_size * step.lam,
+        s=point.s + dual_step_size * step.s,
+    )
+
+
+class PredictorCorrector:
+    def __init__(self, max_iterations: int, optimality_tolerance: float) -> None:
+        self.max_iterations = max_iterations
+        self.optimality_tolerance = optimality_tolerance
+
+    def solve(self, problem: lp_problem.LpProblem) -> ipm_tools.PrimalDualTuple:
+        """Solves the LP `problem` using algorithm 14.3 on p. 411 in Nocedal & Wright."""
+
+        point = calculate_starting_point(problem)
+
+        iteration = 0
+        while (
+            ipm_tools.calculate_duality_measure(point.x, point.s)
+            > self.optimality_tolerance
+            and iteration < self.max_iterations
+        ):
+            # Solve for Predictor-Corrector direction
+            predictor_corrector_direction = (
+                ipm_tools.solve_predictor_corrector_direction(problem, point)
+            )
+
+            # Calculate step sizes
+            eta_k = 0.995 ** (1 / (iteration + 1))
+            primal_step_size = min(
+                ipm_tools.calculate_max_step_size(
+                    point.x, predictor_corrector_direction.x
+                )
+                * eta_k,
+                1,
+            )
+            dual_step_size = min(
+                ipm_tools.calculate_max_step_size(
+                    point.s, predictor_corrector_direction.s
+                )
+                * eta_k,
+                1,
+            )
+
+            # Update the point.
+            point = update_point(
+                point, predictor_corrector_direction, primal_step_size, dual_step_size
+            )
+
+            logger.info(
+                f"Iter: {iteration:3d} | "
+                f"Prim. obj: {problem.objective.T @ point.x:12.6f} | "
+                f"Dual obj: {problem.rhs.T @ point.lam:12.6f} | "
+                f"Prim. feasible: {np.allclose(problem.constraint_matrix @ point.x, problem.rhs)!s:5} | "
+                f"Dual feasible: {np.allclose(problem.constraint_matrix.T @ point.lam + point.s, problem.objective)!s:5} | "
+                f"Duality: {ipm_tools.calculate_duality_measure(point.x, point.s):12.6e}"
+            )
+            iteration += 1
+
+        return point
