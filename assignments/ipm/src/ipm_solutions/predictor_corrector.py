@@ -60,6 +60,9 @@ class PredictorCorrector:
 
         point = calculate_starting_point(problem)
 
+        logger.info("                 Objective             Residual")
+        logger.info("Iter       Primal       Dual       Primal      Dual     Compl")
+
         iteration = 0
         while (
             ipm_tools.calculate_duality_measure(point.x, point.s)
@@ -93,13 +96,19 @@ class PredictorCorrector:
                 point, predictor_corrector_direction, primal_step_size, dual_step_size
             )
 
+            primal_obj = problem.objective.T @ point.x
+            dual_obj = problem.rhs.T @ point.lam
+            primal_res = np.linalg.norm(
+                problem.constraint_matrix @ point.x - problem.rhs
+            )
+            dual_res = np.linalg.norm(
+                problem.constraint_matrix.T @ point.lam + point.s - problem.objective
+            )
+            compl = ipm_tools.calculate_duality_measure(point.x, point.s)
+
             logger.info(
-                f"Iter: {iteration:3d} | "
-                f"Prim. obj: {problem.objective.T @ point.x:12.6f} | "
-                f"Dual obj: {problem.rhs.T @ point.lam:12.6f} | "
-                f"Prim. feasible: {np.allclose(problem.constraint_matrix @ point.x, problem.rhs)!s:5} | "
-                f"Dual feasible: {np.allclose(problem.constraint_matrix.T @ point.lam + point.s, problem.objective)!s:5} | "
-                f"Duality: {ipm_tools.calculate_duality_measure(point.x, point.s):12.6e}"
+                f"{iteration:4d}   {primal_obj:10.3e}  {dual_obj:10.3e}  "
+                f"{primal_res:10.3e} {dual_res:10.3e}  {compl:8.3e}"
             )
             iteration += 1
 

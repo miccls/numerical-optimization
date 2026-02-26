@@ -42,7 +42,6 @@ Your task is to complete the implementation in the `src/ipm` directory. Look for
 - **`ipm_tools.py`**
 - **`predictor_corrector.py`**
 
-
 ## Running the Tests
 
 A test suite is provided in the `tests/` directory to help you verify your implementation. The tests cover individual components like the pivoting strategy as well as the full solver on various problems.

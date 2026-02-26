@@ -3,7 +3,7 @@ import numpy as np
 from common import lp_problem
 from common.numpy_type_aliases import ArrayF
 
-from ipm_solutions import ipm_tools, predictor_corrector
+from ipm import ipm_tools, predictor_corrector
 
 
 class TestStepSizeCalculation:
