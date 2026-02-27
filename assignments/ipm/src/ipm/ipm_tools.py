@@ -85,7 +85,7 @@ def calculate_centering_parameter(
     return 0.0
 
 
-def solve_newtown_direction(
+def solve_newton_direction(
     lp_problem: lp_problem.LpProblem,
     point: PrimalDualTuple,
 ) -> PrimalDualTuple:

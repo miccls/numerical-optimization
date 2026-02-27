@@ -111,8 +111,8 @@ class TestPredictorCorrectorSolve:
     )  # 0, 0, 1, 1, is the optimal solution.
     lp = lp_problem.LpProblem(constraint_matrix=a, rhs=b, objective=c)
 
-    def test_solve_for_affine_direction(self) -> None:
-        """Test computation of the affine scaling direction"""
+    def test_solve_for_newton_direction(self) -> None:
+        """Test computation of the newton direction, see (14.8) in the book."""
 
         # Primal variables
         x = 0.5 * np.ones(4)
@@ -121,7 +121,7 @@ class TestPredictorCorrectorSolve:
         lam = -0.25 * np.ones(2)
         s = np.array([1.25, 1.25, 0.25, 0.25])  # Must be in the interior
 
-        # Now let us solve for the predictor corrector direction dx, dlam, ds
+        # Now let us solve for the Newton direction dx, dlam, ds
         #
         #
         #   | 0  A^T  I | |  dx  |   |  0   |
@@ -140,7 +140,7 @@ class TestPredictorCorrectorSolve:
         expected_direction_lam = np.array([1, 1])
         expected_direction_s = np.array([-1, -1, -1, -1])
 
-        affine_scaling_direction = ipm_tools.solve_newtown_direction(
+        newton_direction = ipm_tools.solve_newton_direction(
             self.lp,
             ipm_tools.PrimalDualTuple(x=x, lam=lam, s=s),
         )
@@ -151,13 +151,13 @@ class TestPredictorCorrectorSolve:
             return v / np.linalg.norm(v)
 
         assert np.allclose(
-            normalize(expected_direction_x), normalize(affine_scaling_direction.x)
+            normalize(expected_direction_x), normalize(newton_direction.x)
         )
         assert np.allclose(
-            normalize(expected_direction_lam), normalize(affine_scaling_direction.lam)
+            normalize(expected_direction_lam), normalize(newton_direction.lam)
         )
         assert np.allclose(
-            normalize(expected_direction_s), normalize(affine_scaling_direction.s)
+            normalize(expected_direction_s), normalize(newton_direction.s)
         )
 
     def test_solve_for_predictor_corrector_direction(self) -> None:

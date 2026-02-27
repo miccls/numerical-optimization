@@ -94,7 +94,7 @@ def calculate_centering_parameter(
     )
 
 
-def solve_newtown_direction(
+def solve_newton_direction(
     lp_problem: lp_problem.LpProblem,
     point: PrimalDualTuple,
 ) -> PrimalDualTuple:
@@ -119,7 +119,7 @@ def solve_affine_scaling_step(
     """Solves the system (14.30) for the Newton direction and scales
     with the affine scaling step sizes."""
 
-    newton_direction = solve_newtown_direction(lp_problem, point)
+    newton_direction = solve_newton_direction(lp_problem, point)
     primal_affine_step_size = calculate_affine_step_size(
         x=point.x, dx=newton_direction.x
     )
