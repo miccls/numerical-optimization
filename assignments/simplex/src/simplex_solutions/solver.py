@@ -3,9 +3,9 @@ from dataclasses import dataclass
 
 import jaxtyping
 import numpy as np
-
 from common import lp_problem
 from common.numpy_type_aliases import ArrayF, ArrayI
+
 from simplex_solutions import linear_algebra, pivoting_strategy
 
 logger = logging.getLogger(__name__)

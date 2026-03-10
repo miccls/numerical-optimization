@@ -10,7 +10,7 @@ from common.numpy_type_aliases import ArrayF
 class PrimalDualTuple:
     x: jaxtyping.Float[ArrayF, " n"]
     lam: jaxtyping.Float[ArrayF, " m"]
-    s: jaxtyping.Float[ArrayF, " n + m"]
+    s: jaxtyping.Float[ArrayF, " n"]
 
 
 def calculate_max_step_size(
@@ -53,7 +53,7 @@ def calculate_mu_after_step(
 
 
 def solve_ipm_system(
-    a: jaxtyping.Float[ArrayF, "n m"],
+    a: jaxtyping.Float[ArrayF, "m n"],
     point: PrimalDualTuple,
     r_c: jaxtyping.Float[ArrayF, " n"],
     r_b: jaxtyping.Float[ArrayF, " m"],

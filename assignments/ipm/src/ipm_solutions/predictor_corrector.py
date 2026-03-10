@@ -81,14 +81,14 @@ class PredictorCorrector:
                     point.x, predictor_corrector_direction.x
                 )
                 * eta_k,
-                1,
+                1.0,
             )
             dual_step_size = min(
                 ipm_tools.calculate_max_step_size(
                     point.s, predictor_corrector_direction.s
                 )
                 * eta_k,
-                1,
+                1.0,
             )
 
             # Update the point.

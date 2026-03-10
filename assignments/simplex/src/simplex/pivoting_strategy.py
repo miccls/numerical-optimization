@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import override
 
 import jaxtyping
-
 from common.numpy_type_aliases import ArrayF, ArrayI
 
 

@@ -1,6 +1,7 @@
 import jaxtyping
 import numpy as np
 from common import lp_problem
+from common.netlib import load_netlib_problems
 from common.numpy_type_aliases import ArrayF
 
 from ipm import ipm_tools, predictor_corrector
@@ -10,21 +11,21 @@ class TestStepSizeCalculation:
     def test_calculate_maximum_stepsize(self) -> None:
         """Test calculation  of the step sizes, `\alpha_k^{pri}` and `\alpha_k^{dual}`, in the
         predictor corrector algorithm is correct."""
-        x = np.array([4, 6, 2, 8, 9, 3, 1])
-        dx = np.array([0, -1, 3, -1000, 10, 1000, 1])
+        x = np.array([4.0, 6.0, 2.0, 8.0, 9.0, 3.0, 1.0])
+        dx = np.array([0.0, -1.0, 3.0, -1000.0, 10.0, 1000.0, 1.0])
 
         # Should be -8 / -1000 = 0.008
         assert ipm_tools.calculate_max_step_size(x, dx) == 0.008
 
     def test_affine_scaling_step(self) -> None:
         """Test calculation of the affine scaling step calculation"""
-        x = np.array([4, 6, 2, 8, 9, 3, 1])
-        dx = np.array([0, -1, 3, -1000, 10, 1000, 1])
+        x = np.array([4.0, 6.0, 2.0, 8.0, 9.0, 3.0, 1.0])
+        dx = np.array([0.0, -1.0, 3.0, -1000.0, 10.0, 1000.0, 1.0])
 
         # Should be -8 / -1000 = 0.008
         assert ipm_tools.calculate_affine_step_size(x, dx) == 0.008
 
-        dx_long = np.array([0, -0.1, 0.3, -5, 1, 100, 0.5])
+        dx_long = np.array([0.0, -0.1, 0.3, -5.0, 1.0, 100.0, 0.5])
 
         # All fractions above are larger than one, but tightest is 8 / -5 = -1.6
         assert ipm_tools.calculate_max_step_size(x, dx_long) == 1.6
@@ -42,12 +43,12 @@ class TestDualityMeasureCalculation:
     def test_calculate_mu_after_step(self) -> None:
         """Tests calculation of the duality measure obtained after making a
         step in the primal and dual variables"""
-        primal_step_size = 1
-        dual_step_size = 2
+        primal_step_size = 1.0
+        dual_step_size = 2.0
         point = ipm_tools.PrimalDualTuple(
-            x=np.array([1, 1, 2]),
+            x=np.array([1.0, 1.0, 2.0]),
             lam=np.zeros(3),
-            s=np.array([2, 1, 3]),
+            s=np.array([2.0, 1.0, 3.0]),
         )
         step = ipm_tools.PrimalDualTuple(
             x=primal_step_size * np.array([0, -1, -1]),
@@ -64,17 +65,17 @@ class TestDualityMeasureCalculation:
         """Test the centering parameter heuristic calculation which determines
         the centering parameter as `(mu_aff / mu)^3`"""
 
-        primal_step_size = 1
-        dual_step_size = 2
+        primal_step_size = 1.0
+        dual_step_size = 2.0
         point = ipm_tools.PrimalDualTuple(
-            x=np.array([1, 1, 2]),
+            x=np.array([1.0, 1.0, 2.0]),
             lam=np.zeros(3),
-            s=np.array([2, 1, 3]),
+            s=np.array([2.0, 1.0, 3.0]),
         )
         step = ipm_tools.PrimalDualTuple(
-            x=np.array([0, -1, -1]) * primal_step_size,
+            x=np.array([0.0, -1.0, -1.0]) * primal_step_size,
             lam=np.zeros(3),
-            s=np.array([1, 0, -1]) * dual_step_size,
+            s=np.array([1.0, 0.0, -1.0]) * dual_step_size,
         )
 
         mu = ipm_tools.calculate_duality_measure(point.x, point.s)
@@ -91,22 +92,22 @@ class TestPredictorCorrectorSolve:
     # LP with unit box as feasible sol.
     a = np.array(
         [
-            [1, 0, 1, 0],
-            [0, 1, 0, 1],
+            [1.0, 0.0, 1.0, 0.0],
+            [0.0, 1.0, 0.0, 1.0],
         ]
     )
     b = np.array(
         [
-            1,
-            1,
+            1.0,
+            1.0,
         ]
     )
     c = np.array(
         [
-            1,
-            1,
-            0,
-            0,
+            1.0,
+            1.0,
+            0.0,
+            0.0,
         ]
     )  # 0, 0, 1, 1, is the optimal solution.
     lp = lp_problem.LpProblem(constraint_matrix=a, rhs=b, objective=c)
@@ -136,9 +137,9 @@ class TestPredictorCorrectorSolve:
 
         # dx = (-1, 1) / sqrt(2). Towards the optimum.
         # (dlam, ds) = 1, 1, -1, -1 to stay dual feasible
-        expected_direction_x = -np.array([1, 1, -1, -1])
-        expected_direction_lam = np.array([1, 1])
-        expected_direction_s = np.array([-1, -1, -1, -1])
+        expected_direction_x = -np.array([1.0, 1.0, -1.0, -1.0])
+        expected_direction_lam = np.array([1.0, 1.0])
+        expected_direction_s = np.array([-1.0, -1.0, -1.0, -1.0])
 
         newton_direction = ipm_tools.solve_newton_direction(
             self.lp,
@@ -226,7 +227,7 @@ class TestPredictorCorrectorSolve:
         solver = predictor_corrector.PredictorCorrector(100, 1e-10)
         solution = solver.solve(self.lp)
 
-        expected_solution = [0, 0, 1, 1]
+        expected_solution = [0.0, 0.0, 1.0, 1.0]
         assert np.allclose(solution.x, expected_solution)
         assert np.allclose(self.a @ solution.x, self.b)
 
@@ -247,8 +248,8 @@ class TestLpSolving:
             ],
             dtype=float,
         )
-        b = np.array([0, 0, 1], dtype=float).T
-        c = np.array([-10, 57, 9, 24, 0, 0, 0], dtype=float)
+        b = np.array([0.0, 0.0, 1.0], dtype=float).T
+        c = np.array([-10.0, 57.0, 9.0, 24.0, 0.0, 0.0, 0.0], dtype=float)
         lp = lp_problem.LpProblem(constraint_matrix=a, rhs=b, objective=c)
 
         # Test solving the lp
@@ -257,3 +258,56 @@ class TestLpSolving:
 
         assert np.isclose(c.T @ solution.x, -1.0)
         assert np.allclose(a @ solution.x, b)
+
+class TestSolveAfiro:
+    def test_afiro(self) -> None:
+        # Try to solve the problem afiro from netlib
+        res = load_netlib_problems.download_and_parse_mps("afiro")
+        assert res is not None
+        a, b, c, row_types, _, _ = res
+        a_std, b_std, c_std = load_netlib_problems.convert_to_standard_form(
+            a, b, c, row_types
+        )
+
+        lp = lp_problem.LpProblem(a_std, b_std, c_std)
+
+        solver = predictor_corrector.PredictorCorrector(10000, 1e-10)
+        solution = solver.solve(lp)
+
+        assert np.isclose(c_std.T @ solution.x, -464.75)
+
+
+class TestSolveAdlittle:
+    def test_adlittle(self) -> None:
+        # Try to solve the problem afiro from netlib
+        res = load_netlib_problems.download_and_parse_mps("adlittle")
+        assert res is not None
+        a, b, c, row_types, _, _ = res
+        a_std, b_std, c_std = load_netlib_problems.convert_to_standard_form(
+            a, b, c, row_types
+        )
+
+        lp = lp_problem.LpProblem(a_std, b_std, c_std)
+
+        solver = predictor_corrector.PredictorCorrector(10000, 1e-10)
+        solution = solver.solve(lp)
+
+        assert np.isclose(c_std.T @ solution.x, 225494.963160)  # -1.5862801845E+02
+
+
+class TestSolveBandm:
+    def test_bandm(self) -> None:
+        # Try to solve the problem afiro from netlib
+        res = load_netlib_problems.download_and_parse_mps("bandm")
+        assert res is not None
+        a, b, c, row_types, _, _ = res
+        a_std, b_std, c_std = load_netlib_problems.convert_to_standard_form(
+            a, b, c, row_types
+        )
+
+        lp = lp_problem.LpProblem(a_std, b_std, c_std)
+
+        solver = predictor_corrector.PredictorCorrector(10000, 1e-10)
+        solution = solver.solve(lp)
+
+        assert np.isclose(c_std.T @ solution.x, -158.62801845)

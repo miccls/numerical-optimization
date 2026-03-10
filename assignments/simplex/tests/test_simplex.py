@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 import jaxtyping
 import numpy as np
 import pytest
-
 from common import lp_problem
 from common.numpy_type_aliases import ArrayI
+
 from simplex import linear_algebra, pivoting_strategy, solver
 
 if TYPE_CHECKING:

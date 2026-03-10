@@ -1,6 +1,5 @@
 import jaxtyping
 import numpy as np
-
 from common.numpy_type_aliases import ArrayF
 
 
