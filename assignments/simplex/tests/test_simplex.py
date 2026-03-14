@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from common import lp_problem
 from common.numpy_type_aliases import ArrayI
+from pytest_unordered import unordered
 
 from simplex import linear_algebra, pivoting_strategy, solver
 
@@ -153,6 +154,28 @@ def example_problem_131() -> tuple[lp_problem.LpProblem, ArrayI]:
     initial_basis = np.array([2, 3])
 
     return lp_problem.LpProblem(a, b, c), initial_basis
+
+
+@pytest.fixture()
+def problem_with_auxvars_left_in_basis() -> lp_problem.LpProblem:
+    a = np.array(
+        [  # These three at the end are aux
+            [1.0, 1.0, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0, 1.0, 0.0],
+            [0.0, 1.0, 1.0, 0.0, 0.0, 1.0],
+        ]
+    )
+    b = np.array([0.0, 0.0, 0.0])
+    c = np.array([0.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+    return lp_problem.LpProblem(a, b, c)
+
+
+class TestFindingInitialBasis:
+    def test_pivot_out_auxiliary(self, problem_with_auxvars_left_in_basis: lp_problem.LpProblem) -> None:
+        basis = solver.purge_aux_vars(
+            problem_with_auxvars_left_in_basis, np.array([3, 4, 5]), 3
+        )
+        assert list(basis) == unordered([0, 1, 2])
 
 
 class TestSolver:

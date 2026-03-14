@@ -1,4 +1,5 @@
 import logging
+import time
 
 import numpy as np
 from common import lp_problem
@@ -61,9 +62,10 @@ class PredictorCorrector:
         point = calculate_starting_point(problem)
 
         logger.info("                Objective              Residual")
-        logger.info("Iter       Primal       Dual       Primal      Dual     Compl")
+        logger.info("Iter       Primal       Dual       Primal      Dual     Compl       Time")
 
         iteration = 0
+        start_time = time.time()
         while (
             ipm_tools.calculate_duality_measure(point.x, point.s)
             > self.optimality_tolerance
@@ -105,10 +107,11 @@ class PredictorCorrector:
                 problem.constraint_matrix.T @ point.lam + point.s - problem.objective
             )
             compl = ipm_tools.calculate_duality_measure(point.x, point.s)
+            duration = time.time() - start_time
 
             logger.info(
                 f"{iteration:4d}   {primal_obj:10.3e}  {dual_obj:10.3e}  "
-                f"{primal_res:10.3e} {dual_res:10.3e}  {compl:8.3e}"
+                f"{primal_res:10.3e} {dual_res:10.3e}  {compl:8.3e}    {duration:5.2}s"
             )
             iteration += 1
 

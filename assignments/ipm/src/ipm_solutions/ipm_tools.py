@@ -73,7 +73,8 @@ def solve_ipm_system(
 
     d2 = point.x / point.s
     ad2a = (a * d2) @ a.T
-    dlam = np.linalg.inv(ad2a) @ (-r_b - (a * d2) @ r_c + a @ (r_xs / point.s))
+    # About 2x faster than np.linalg.inv.
+    dlam = np.linalg.solve(ad2a, -r_b - (a * d2) @ r_c + a @ (r_xs / point.s))
     ds = -r_c - a.T @ dlam
     dx = -(r_xs / point.s) - (d2 * ds)
     return PrimalDualTuple(x=dx, lam=dlam, s=ds)
@@ -112,14 +113,11 @@ def solve_newton_direction(
     return solve_ipm_system(a, point, r_c, r_b, r_xs)
 
 
-def solve_affine_scaling_step(
-    lp_problem: lp_problem.LpProblem,
+def calculate_affine_scaling_step(
     point: PrimalDualTuple,
+    newton_direction: PrimalDualTuple,
 ) -> PrimalDualTuple:
-    """Solves the system (14.30) for the Newton direction and scales
-    with the affine scaling step sizes."""
-
-    newton_direction = solve_newton_direction(lp_problem, point)
+    """Scales the Newton direction with the affine scaling step sizes. See (14.33) on p. 408 in the book."""
     primal_affine_step_size = calculate_affine_step_size(
         x=point.x, dx=newton_direction.x
     )
@@ -146,9 +144,10 @@ def solve_predictor_corrector_direction(
 
     xs = point.x * point.s
 
-    affine_step = solve_affine_scaling_step(lp_problem, point)
+    newton_direction = solve_newton_direction(lp_problem, point)
+    affine_step = calculate_affine_scaling_step(point, newton_direction)
 
-    dxds = affine_step.x * affine_step.s
+    dxds = newton_direction.x * newton_direction.s
     e = np.ones(point.x.shape)
     mu = calculate_duality_measure(point.x, point.s)
     r_xs = xs + dxds - calculate_centering_parameter(point, affine_step) * mu * e

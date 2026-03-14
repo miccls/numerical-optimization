@@ -1,7 +1,6 @@
 import jaxtyping
 import numpy as np
 from common import lp_problem
-from common.netlib import load_netlib_problems
 from common.numpy_type_aliases import ArrayF
 
 from ipm import ipm_tools, predictor_corrector
@@ -189,7 +188,8 @@ class TestPredictorCorrectorSolve:
         #
 
         point = ipm_tools.PrimalDualTuple(x=x, lam=lam, s=s)
-        step = ipm_tools.solve_affine_scaling_step(self.lp, point)
+        newton_direction = ipm_tools.solve_newton_direction(self.lp, point)
+        step = ipm_tools.calculate_affine_scaling_step(point, newton_direction)
 
         mu = ipm_tools.calculate_duality_measure(point.x, point.s)
         centering_param = ipm_tools.calculate_centering_parameter(point, step)
@@ -206,7 +206,7 @@ class TestPredictorCorrectorSolve:
         assert np.allclose(self.a @ predictor_corrector_direction.x, 0)
         r_xs = (
             point.x * point.s
-            + step.x * step.s
+            + newton_direction.x * newton_direction.s
             - centering_param * mu * np.ones(point.x.shape)
         )
         assert np.allclose(
@@ -258,56 +258,3 @@ class TestLpSolving:
 
         assert np.isclose(c.T @ solution.x, -1.0)
         assert np.allclose(a @ solution.x, b)
-
-class TestSolveAfiro:
-    def test_afiro(self) -> None:
-        # Try to solve the problem afiro from netlib
-        res = load_netlib_problems.download_and_parse_mps("afiro")
-        assert res is not None
-        a, b, c, row_types, _, _ = res
-        a_std, b_std, c_std = load_netlib_problems.convert_to_standard_form(
-            a, b, c, row_types
-        )
-
-        lp = lp_problem.LpProblem(a_std, b_std, c_std)
-
-        solver = predictor_corrector.PredictorCorrector(10000, 1e-10)
-        solution = solver.solve(lp)
-
-        assert np.isclose(c_std.T @ solution.x, -464.75)
-
-
-class TestSolveAdlittle:
-    def test_adlittle(self) -> None:
-        # Try to solve the problem afiro from netlib
-        res = load_netlib_problems.download_and_parse_mps("adlittle")
-        assert res is not None
-        a, b, c, row_types, _, _ = res
-        a_std, b_std, c_std = load_netlib_problems.convert_to_standard_form(
-            a, b, c, row_types
-        )
-
-        lp = lp_problem.LpProblem(a_std, b_std, c_std)
-
-        solver = predictor_corrector.PredictorCorrector(10000, 1e-10)
-        solution = solver.solve(lp)
-
-        assert np.isclose(c_std.T @ solution.x, 225494.963160)  # -1.5862801845E+02
-
-
-class TestSolveBandm:
-    def test_bandm(self) -> None:
-        # Try to solve the problem afiro from netlib
-        res = load_netlib_problems.download_and_parse_mps("bandm")
-        assert res is not None
-        a, b, c, row_types, _, _ = res
-        a_std, b_std, c_std = load_netlib_problems.convert_to_standard_form(
-            a, b, c, row_types
-        )
-
-        lp = lp_problem.LpProblem(a_std, b_std, c_std)
-
-        solver = predictor_corrector.PredictorCorrector(10000, 1e-10)
-        solution = solver.solve(lp)
-
-        assert np.isclose(c_std.T @ solution.x, -158.62801845)

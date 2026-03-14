@@ -5,6 +5,8 @@ import jaxtyping
 import numpy as np
 from common.numpy_type_aliases import ArrayF, ArrayI
 
+PIVOTING_TOLERANCE = 1e-6
+
 
 class PivotingStrategy(ABC):
     @abstractmethod
@@ -70,9 +72,9 @@ def index_of_smallest_ratio(
     """
 
     smallest_ratio_with_smallest_var_index = min(
-        (x_basis[i] / basic_direction[i], basis[i], i)
+        (max(0.0, float(x_basis[i])) / basic_direction[i], basis[i], i)
         for i in range(len(x_basis))
-        if basic_direction[i] > 0
+        if basic_direction[i] > PIVOTING_TOLERANCE
     )
 
     return smallest_ratio_with_smallest_var_index[2]
@@ -85,7 +87,7 @@ class BlandsRule(PivotingStrategy):
         reduced_costs: jaxtyping.Float[ArrayF, " num_nonbasic"],
         non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
     ) -> int:
-        return int(non_basic_vars[reduced_costs < 0].min())
+        return int(non_basic_vars[reduced_costs < -PIVOTING_TOLERANCE].min())
 
     @override
     def pick_exiting_index(

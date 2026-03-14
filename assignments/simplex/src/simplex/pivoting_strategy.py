@@ -4,6 +4,8 @@ from typing import override
 import jaxtyping
 from common.numpy_type_aliases import ArrayF, ArrayI
 
+PIVOTING_TOLERANCE = 1e-6
+
 
 class PivotingStrategy(ABC):
     @abstractmethod
@@ -49,6 +51,7 @@ class PivotingStrategy(ABC):
         Returns:
             Index `p` in ``basis`` array for the decision variable that should be removed from the basis.
         """
+        ...
 
 
 class BlandsRule(PivotingStrategy):

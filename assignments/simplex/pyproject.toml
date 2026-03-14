@@ -25,6 +25,10 @@ test = ["pytest>=9.0.2"]
 strict = true
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "scipy.*"
+ignore_missing_imports = true
+
 [tool.ruff]
 line-length = 88    # default in black
 exclude = [".venv"]

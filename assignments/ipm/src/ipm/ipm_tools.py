@@ -10,7 +10,7 @@ from common.numpy_type_aliases import ArrayF
 class PrimalDualTuple:
     x: jaxtyping.Float[ArrayF, " n"]
     lam: jaxtyping.Float[ArrayF, " m"]
-    s: jaxtyping.Float[ArrayF, " n + m"]
+    s: jaxtyping.Float[ArrayF, " n"]
 
 
 def calculate_max_step_size(
@@ -28,7 +28,7 @@ def calculate_affine_step_size(
 ) -> float:
     """Calculates the maximum allowable step length for the affine scaling algorithm. Used for both primal and
     dual variables. For details, see p. 408, (14.32) in Nocedal & Wright."""
-    # TODO(you): Calculate the maximum allowable step size in the affine scaling (Newton) direction
+    # TODO(you): Calculate the maximum allowable step size in the affine scaling direction
     return 0.0
 
 
@@ -52,7 +52,7 @@ def calculate_mu_after_step(
 
 
 def solve_ipm_system(
-    a: jaxtyping.Float[ArrayF, "n m"],
+    a: jaxtyping.Float[ArrayF, "m n"],
     point: PrimalDualTuple,
     r_c: jaxtyping.Float[ArrayF, " n"],
     r_b: jaxtyping.Float[ArrayF, " m"],
@@ -91,29 +91,24 @@ def solve_newton_direction(
 ) -> PrimalDualTuple:
     """Solves the system (14.35) in Nocedal & Wright for the Newton direction"""
 
-    a = lp_problem.constraint_matrix
-
     # TODO(you): Compute the proper residuals used to solve for the Newton direction
-    r_c = np.zeros(a.shape[1])
-    r_b = np.zeros(a.shape[0])
-    r_xs = np.zeros(a.shape[1])
-
-    return solve_ipm_system(a, point, r_c, r_b, r_xs)
-
-
-def solve_affine_scaling_step(
-    lp_problem: lp_problem.LpProblem,
-    point: PrimalDualTuple,
-) -> PrimalDualTuple:
-    """Solves the system (14.30) for the Newton direction and scales
-    with the affine scaling step sizes."""
-
-    # TODO(you): Construct the affine scaling step
-
     return PrimalDualTuple(
         x=np.zeros(lp_problem.constraint_matrix.shape[1]),
         lam=np.zeros(lp_problem.constraint_matrix.shape[0]),
         s=np.zeros(lp_problem.constraint_matrix.shape[1]),
+    )
+
+
+def calculate_affine_scaling_step(
+    point: PrimalDualTuple,
+    newton_direction: PrimalDualTuple,
+) -> PrimalDualTuple:
+    """Scales the Newton direction with the affine scaling step sizes. See (14.33) on p. 408 in the book."""
+    # TODO(you): Construct the affine scaling step
+    return PrimalDualTuple(
+        x=np.zeros(point.x.shape),
+        lam=np.zeros(point.lam.shape),
+        s=np.zeros(point.s.shape),
     )
 
 
@@ -123,11 +118,9 @@ def solve_predictor_corrector_direction(
 ) -> PrimalDualTuple:
     """Solves the system (14.35) in Nocedal & Wright for the predictor corrector direction"""
 
-    a = lp_problem.constraint_matrix
-
     # TODO(you): Compute the proper residuals used to solve for the Predictor Corrector direction
-    r_c = np.zeros(a.shape[1])
-    r_b = np.zeros(a.shape[0])
-    r_xs = np.zeros(a.shape[1])
-
-    return solve_ipm_system(a, point, r_c, r_b, r_xs)
+    return PrimalDualTuple(
+        x=np.zeros(lp_problem.constraint_matrix.shape[1]),
+        lam=np.zeros(lp_problem.constraint_matrix.shape[0]),
+        s=np.zeros(lp_problem.constraint_matrix.shape[1]),
+    )

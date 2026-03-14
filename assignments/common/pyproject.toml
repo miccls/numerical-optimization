@@ -20,3 +20,7 @@ lint.ignore = ["F722"]
 [tool.mypy]
 strict = true
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "scipy.*"
+ignore_missing_imports = true
