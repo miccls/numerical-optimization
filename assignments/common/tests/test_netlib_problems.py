@@ -4,7 +4,7 @@ import pytest
 from common import lp_problem
 from common.netlib import load_netlib_problems
 from ipm_solutions import predictor_corrector
-from simplex_solutions import solver
+from simplex_solutions import primal_simplex
 from simplex_solutions import pivoting_strategy
 
 # Database of known optimum values and recommended parameters
@@ -58,7 +58,7 @@ def test_netlib_simplex(name: str, cached_lp_problems: dict[str, lp_problem.LpPr
     optimum = NETLIB_SOLUTIONS[name]["optimum"]
     iters = int(NETLIB_SOLUTIONS[name].get("simplex_iters", 1000))
     
-    simplex_solver = solver.Solver(pivot_strategy=pivoting_strategy.BlandsRule())
+    simplex_solver = primal_simplex.PrimalSimplex(pivot_strategy=pivoting_strategy.BlandsRule())
     solution = simplex_solver.solve(lp, max_iterations=iters)
     
     obtained_optimum = float(lp.objective.T @ solution.solution)

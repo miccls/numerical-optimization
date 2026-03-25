@@ -8,7 +8,9 @@ from common import lp_problem
 from common.numpy_type_aliases import ArrayI
 from pytest_unordered import unordered
 
-from simplex import linear_algebra, pivoting_strategy, solver
+from simplex_solutions import linear_algebra, pivoting_strategy, primal_simplex
+from simplex_solutions.dual_simplex import DualSimplex
+from simplex_util import InfeasibleLpError, SimplexCyclingError, UnboundedLpError
 
 if TYPE_CHECKING:
     from common.numpy_type_aliases import ArrayF
@@ -172,7 +174,7 @@ def problem_with_auxvars_left_in_basis() -> lp_problem.LpProblem:
 
 class TestFindingInitialBasis:
     def test_pivot_out_auxiliary(self, problem_with_auxvars_left_in_basis: lp_problem.LpProblem) -> None:
-        basis = solver.purge_aux_vars(
+        basis = primal_simplex.purge_aux_vars(
             problem_with_auxvars_left_in_basis, np.array([3, 4, 5]), 3
         )
         assert list(basis) == unordered([0, 1, 2])
@@ -194,14 +196,14 @@ class TestSolver:
         )
         assert (x >= 0).all()
 
-        solve_result = solver.Solver().solve(example_problem_35, initial_basis=basis)
+        solve_result = primal_simplex.PrimalSimplex().solve(example_problem_35, initial_basis=basis)
 
         assert sorted(solve_result.basis) == [0, 1, 2]
         assert solve_result.solution == pytest.approx(np.array([4, 4, 4, 0, 0, 0]))
         assert solve_result.objective_value == pytest.approx(-136)
 
     def test_find_initial_basis(self, example_problem_35: lp_problem.LpProblem) -> None:
-        assert sorted(solver.Solver().find_initial_basis(example_problem_35)) == [
+        assert sorted(primal_simplex.PrimalSimplex().find_initial_basis(example_problem_35)) == [
             0,
             1,
             2,
@@ -210,7 +212,7 @@ class TestSolver:
     def test_problem_without_start_solution(
         self, example_problem_35: lp_problem.LpProblem
     ) -> None:
-        solve_result = solver.Solver().solve(example_problem_35)
+        solve_result = primal_simplex.PrimalSimplex().solve(example_problem_35)
 
         assert sorted(solve_result.basis) == [0, 1, 2]
         assert solve_result.solution == pytest.approx(np.array([4, 4, 4, 0, 0, 0]))
@@ -233,13 +235,13 @@ class TestSolver:
         initial_basis = np.array([4, 5, 6])
 
         with pytest.raises(
-            solver.SimplexCyclingError, match="Basis cycle of length 6 detected"
+            SimplexCyclingError, match="Basis cycle of length 6 detected"
         ):
-            solver.Solver(pivoting_strategy.DantzigsRule()).solve(
+            primal_simplex.PrimalSimplex(pivoting_strategy.DantzigsRule()).solve(
                 lp_problem.LpProblem(a, b, c), initial_basis=initial_basis
             )
 
-        assert solver.Solver(pivoting_strategy.BlandsRule()).solve(
+        assert primal_simplex.PrimalSimplex(pivoting_strategy.BlandsRule()).solve(
             lp_problem.LpProblem(a, b, c), initial_basis=initial_basis
         ).objective_value == pytest.approx(-1.0)
 
@@ -251,8 +253,8 @@ class TestSolver:
         c = np.array([-1, 0, 0], dtype=float)
 
         test_problem = lp_problem.LpProblem(a, b, c)
-        with pytest.raises(solver.InfeasibleLpError):
-            solver.Solver().solve(test_problem)
+        with pytest.raises(InfeasibleLpError):
+            primal_simplex.PrimalSimplex().solve(test_problem)
 
     def test_unbounded_problem(self) -> None:
         # min -2*x1 - x2 s.t. x1 - x2 <= 10, 2*x1 <= 40
@@ -262,14 +264,14 @@ class TestSolver:
         c = np.array([-2, -1, 0, 0], dtype=float)
 
         test_problem = lp_problem.LpProblem(a, b, c)
-        with pytest.raises(solver.UnboundedLpError):
-            solver.Solver().solve(test_problem)
+        with pytest.raises(UnboundedLpError):
+            primal_simplex.PrimalSimplex().solve(test_problem)
 
     def test_example_13_1_from_book(
         self, example_problem_131: tuple[lp_problem.LpProblem, ArrayI]
     ) -> None:
         # Lukas spotted typo in book, test to verify!
-        simplex_solver = solver.Solver()
+        simplex_solver = primal_simplex.PrimalSimplex()
         solve_result = simplex_solver.solve(
             problem=example_problem_131[0], initial_basis=example_problem_131[1]
         )
@@ -286,9 +288,18 @@ class TestSolver:
     def test_example_13_1_from_book_without_initial_basis(
         self,
         example_problem_131: tuple[lp_problem.LpProblem, ArrayI],
-        strategy: type[pivoting_strategy.PivotingStrategy],
+        strategy: type[pivoting_strategy.PrimalPivotingStrategy],
     ) -> None:
-        solve_result = solver.Solver(pivot_strategy=strategy()).solve(
+        solve_result = primal_simplex.PrimalSimplex(pivot_strategy=strategy()).solve(
             example_problem_131[0]
         )
         assert solve_result.objective_value == pytest.approx(-52 / 3)
+
+class TestDualPivoting:
+    # TODO(martins) Do these tests
+    # TODO(martins) Also, keep writing tests to futher
+    # your understanding. First when you have a lot of tests,
+    # continue with implementation of Dual simplex.
+    # After dual simplex is done, fix presolve!
+    def test_dual_blands_rule(self) -> None:
+        pass

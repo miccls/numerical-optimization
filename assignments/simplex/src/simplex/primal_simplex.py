@@ -1,85 +1,23 @@
 import logging
 import time
-from dataclasses import dataclass
 
 import jaxtyping
 import numpy as np
 from common import lp_problem
 from common.numpy_type_aliases import ArrayF, ArrayI
 
-from simplex_solutions import linear_algebra, pivoting_strategy
+from simplex import linear_algebra, pivoting_strategy
+from simplex_util import (
+    OPTIMALITY_TOL,
+    InfeasibleLpError,
+    IterationLimitError,
+    SolveFailedError,
+    SolveHistory,
+    SolveResult,
+    UnboundedLpError,
+)
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class SolveResult:
-    basis: jaxtyping.Int[ArrayI, " m"]
-    solution: jaxtyping.Float[ArrayF, " n"]
-    objective_value: float
-
-
-class SolveFailedError(RuntimeError):
-    pass
-
-
-class InfeasibleLpError(SolveFailedError):
-    pass
-
-
-class UnboundedLpError(SolveFailedError):
-    pass
-
-
-class SimplexCyclingError(SolveFailedError):
-    pass
-
-
-class IterationLimitError(SolveFailedError):
-    pass
-
-
-MIN_CYCLE_LEN = 2
-OBJECTIVE_IMPROVEMENT_TOL = 1e-9
-OPTIMALITY_TOL = 1e-9
-INVERSE_RECOMPUTE_INTERVAL = 1000
-
-
-class SolveHistory:
-    def __init__(self) -> None:
-        self.basis_: list[tuple[int, ...]] = []
-        self.objective_: list[float] = []
-        self.basis_cycle_: set[tuple[int, ...]] = set()
-
-    @property
-    def basis_history(self) -> list[tuple[int, ...]]:
-        return self.basis_
-
-    @property
-    def objective_history(self) -> list[float]:
-        return self.objective_
-
-    def update(
-        self, basis: jaxtyping.Int[ArrayI, " m"], objective_value: float
-    ) -> None:
-        self.objective_.append(objective_value)
-
-        if (
-            len(self.objective_) > 1
-            and abs(self.objective_[-1] - self.objective_[-2])
-            > OBJECTIVE_IMPROVEMENT_TOL
-        ):
-            # If the objective improved, we are not cycling, so we can clear the history.
-            self.basis_cycle_.clear()
-
-        basis_signature = tuple(int(b) for b in sorted(basis))
-        self.basis_.append(basis_signature)
-
-        if basis_signature in self.basis_cycle_:
-            raise SimplexCyclingError(
-                f"Basis cycle of length {len(self.basis_cycle_)} detected"
-            )
-        self.basis_cycle_.add(basis_signature)
 
 
 def is_linearly_independent(
@@ -88,11 +26,9 @@ def is_linearly_independent(
     entering_var: int,
     exiting_index: int,
 ) -> bool:
-    pivot_column_entry = (
-        inv_basis_matrix[exiting_index] @ problem.constraint_matrix[:, entering_var]
-    )
-    tolerance = 1e-9
-    return bool(abs(pivot_column_entry) > tolerance)
+    """Helper function to check if a potential pivot maintains basis nonsingularity."""
+    # TODO(you): Implement independence check
+    return True
 
 
 def purge_aux_vars(
@@ -100,38 +36,12 @@ def purge_aux_vars(
     basis: jaxtyping.Int[ArrayI, " m"],
     num_variables: int,
 ) -> jaxtyping.Int[ArrayI, " m"]:
-    aux_vars_still_in_basis = [b for b in basis if not b < num_variables]
-    if aux_vars_still_in_basis:
-        inv_basis_matrix = np.linalg.inv(problem.constraint_matrix[:, basis])
-
-        while aux_vars_still_in_basis:
-            exiting_variable = aux_vars_still_in_basis.pop()
-            exiting_index = next(
-                i for i, x in enumerate(basis) if x == exiting_variable
-            )
-
-            # Generator of vars not in basis:
-            non_basic_vars = (b for b in range(num_variables) if b not in basis)
-            while not is_linearly_independent(
-                problem,
-                inv_basis_matrix,
-                (entering_var := next(non_basic_vars)),
-                exiting_index=exiting_index,
-            ):
-                pass
-
-            basis[exiting_index] = entering_var
-
-            inv_basis_matrix = linear_algebra.update_inverse(
-                problem.constraint_matrix,
-                inv_basis_matrix,
-                entering_variable=entering_var,
-                exiting_index=exiting_index,
-            )
+    """Pivots out any auxiliary variables still present in the basis after Phase 1."""
+    # TODO(you): Implement the logic to pivot out artificial variables.
     return basis
 
 
-class Solver:
+class PrimalSimplex:
     pivoting_strategy_: pivoting_strategy.PivotingStrategy
     solve_history_: SolveHistory
 
@@ -164,23 +74,33 @@ class Solver:
 
         logger.info("Solving auxiliary phase one LP to find a starting basis...")
 
-        e_matrix = np.diag(np.array([1.0 if b >= 0 else -1.0 for b in problem.rhs]))
-        phase_one_problem = lp_problem.LpProblem(
-            constraint_matrix=np.concatenate(
-                [problem.constraint_matrix, e_matrix], axis=1
-            ),
-            rhs=np.array(problem.rhs),
-            objective=np.concatenate(
-                [np.zeros(problem.num_variables), np.ones(len(problem.rhs))]
-            ),
+        # TODO(you): Set up an auxiliary LP whose solution is a basic feasible solution to the original problem
+        # See page 378 in the book, for example.
+
+        num_constraints = len(problem.rhs)
+
+        # TODO(you): Construct an appropriate constraint matrix
+        phase_one_constraint_matrix = np.zeros(
+            (
+                problem.constraint_matrix.shape[0],
+                problem.constraint_matrix.shape[1] + num_constraints,
+            )
         )
-        # Use the smallest subscript rule to hopefully basis containing the original variables
-        phase_one_solver = Solver(pivot_strategy=pivoting_strategy.BlandsRule())
+
+        # TODO(you): What is the correct objective function?
+        phase_one_objective = np.zeros(problem.num_variables + num_constraints)
+
+        phase_one_problem = lp_problem.LpProblem(
+            constraint_matrix=phase_one_constraint_matrix,
+            rhs=np.array(problem.rhs),
+            objective=phase_one_objective,
+        )
+
+        phase_one_solver = PrimalSimplex(pivot_strategy=pivoting_strategy.BlandsRule())
         phase_one_result = phase_one_solver.solve(
             phase_one_problem,
-            initial_basis=np.array(
-                range(problem.num_variables, phase_one_problem.num_variables)
-            ),
+            # TODO(you): What is valid starting basis for the Phase 1 problem?
+            initial_basis=np.zeros(num_constraints, dtype=int),
             max_iterations=max_iterations,
         )
         if phase_one_result.objective_value > OPTIMALITY_TOL:
@@ -193,20 +113,13 @@ class Solver:
             f"Found starting basis {phase_one_result.basis if len(phase_one_result.basis) < max_print_size else ''}"
         )
 
-        # Pivot out any auxiliary variables that may be in the basis
+        # TODO(you): The final basis could contain some of the auxiliary variables introduced in Phase 1.
+        # Use purge_aux_vars to handle this.
         basis = purge_aux_vars(
             phase_one_problem, phase_one_result.basis, problem.num_variables
         )
 
-        aux_vars_still_in_basis = [b for b in basis if not b < problem.num_variables]
-        if aux_vars_still_in_basis:
-            raise SolveFailedError("Auxhiliary variables still present in the basis.")
-
         return basis
-
-        # TODO(you): Set up an auxiliary LP whose solution is a basic feasible solution to the original problem
-        # See page 378 in the book, for example.
-        # return np.zeros(problem.constraint_matrix.shape[0], dtype=int)
 
     def _compute_reduced_costs(
         self,
@@ -215,11 +128,9 @@ class Solver:
         non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
         inv_basis_matrix: jaxtyping.Float[ArrayF, "m m"],
     ) -> jaxtyping.Float[ArrayF, " num_nonbasic"]:
-        n_matrix = problem.constraint_matrix[:, non_basic_vars]
-
-        return problem.objective[non_basic_vars] - n_matrix.T @ (
-            inv_basis_matrix.T @ problem.objective[basis]
-        )
+        """Computes the reduced costs for the non-basic variables."""
+        # TODO(you): Implement reduced cost calculation
+        return np.zeros(len(non_basic_vars))
 
     def _finalize_result(
         self,
@@ -251,7 +162,7 @@ class Solver:
                 basis = self.find_initial_basis(problem, max_iterations=max_iterations)
             except SolveFailedError as e:
                 raise InfeasibleLpError(
-                    f"Failed to find an initial simplex basis: {e}"
+                    "Failed to find an initial simplex basis"
                 ) from e
 
         inv_basis_matrix = np.linalg.inv(problem.constraint_matrix[:, basis])
@@ -303,21 +214,17 @@ class Solver:
             # Step 4: Update the inverse of the basis matrix (feel free to change input args to update_inverse if desirable)
             basis[basic_exiting_index] = entering_variable
 
-            if (iteration % INVERSE_RECOMPUTE_INTERVAL == 0):
-                inv_basis_matrix = np.linalg.inv(problem.constraint_matrix[:, basis])
-            else:
-                inv_basis_matrix = linear_algebra.update_inverse(
-                    problem.constraint_matrix,
-                    inv_basis_matrix,
-                    entering_variable,
-                    basic_exiting_index,
-                )  # <-- TODO in here.
+            # TODO(you): Update the inverse of the basis matrix using linear_algebra.update_inverse
+            inv_basis_matrix = linear_algebra.update_inverse(
+                problem.constraint_matrix,
+                inv_basis_matrix,
+                entering_variable,
+                basic_exiting_index,
+            )
 
             # Step 5: Update the basic solution from the basic direction
             # TODO(you): ...
-            x_entering = float(x_basis[basic_exiting_index] / d[basic_exiting_index])
-            x_basis -= x_entering * d
-            x_basis[basic_exiting_index] = x_entering
+            x_basis = np.zeros(len(basis))
 
             self.solve_history_.update(basis, float(problem.objective[basis] @ x_basis))
             logger.info(

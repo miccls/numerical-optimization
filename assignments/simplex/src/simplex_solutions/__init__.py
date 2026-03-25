@@ -6,5 +6,5 @@ with install_import_hook(("simplex_solutions", "common"), "beartype.beartype"):
     from simplex_solutions import (  # noqa: F401
         linear_algebra,
         pivoting_strategy,
-        solver,
+        primal_simplex,
     )
