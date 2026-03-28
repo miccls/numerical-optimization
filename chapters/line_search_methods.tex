@@ -1,3 +1,4 @@
+\newpage
 \section{Line Search Methods}
 Two concepts they mention in this chapter which I felt somewhat unfamiliar with were \text{Lipschitz} continuity and small $o$ notation.
 Therefore, I thought I would introduce them both here before moving on to solving the exercises.
@@ -8,6 +9,15 @@ The selected exercises for this chapter are 3.2, 3.5, 3.7 and 3.8.
 
 \subsubsection{Exercise 3.2}
 % Use graphical argument and intuition around the conditions.
+
+The Wolfe conditions are the following two inequalities 
+\begin{align*}
+    f(x_k + \alpha p_k) &\leq f(x_k) + \alpha c_1 \nabla f(x_k)^T p_k \quad \textit{(Sufficient decrease condition)}\\
+    \nabla f(x_k + \alpha p_k)^T p_k &\geq c_2 \nabla f(x_k)^T p_k  \quad \textit{(Curvature condition)}
+\end{align*}
+for $0 < c_1 < c_2 1$.
+In this exercise we are to show that if $c_2 < c_1$ there are situations where no step length $\alpha$ satisfies both conditions.
+
 \subsubsection{Exercise 3.5}
 \subsubsection{Exercise 3.7}
 \subsubsection{Exercise 3.8}
