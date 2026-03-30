@@ -389,9 +389,20 @@ class TestDualPhaseOne:
     def test_artificial_problem_setup(
         self, example_problem_35: lp_problem.LpProblem
     ) -> None:
-        solver = dual_simplex.DualSimplex()
-        aug_prob, basis = solver._setup_artificial_problem(example_problem_35)
+        # Create a problem that is not dual-feasible with the QR-chosen basis [0, 1, 2].
+        # By negating the objective, we get negative reduced costs for the slack variables.
+        # The problem failed previously since the basis obtained in _setup_artificial_problem
+        # was already dual feasible so nothing happened.
+        non_dual_feasible_problem = lp_problem.LpProblem(
+            constraint_matrix=example_problem_35.constraint_matrix,
+            rhs=example_problem_35.rhs,
+            objective=-example_problem_35.objective,
+        )
 
+        solver = dual_simplex.DualSimplex()
+        aug_prob, basis = solver._setup_artificial_problem(non_dual_feasible_problem)
+
+        assert non_dual_feasible_problem.constraint_matrix.shape == (3, 6)
         assert aug_prob.constraint_matrix.shape == (4, 7)
         assert len(basis) == 4
 

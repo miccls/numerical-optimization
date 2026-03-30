@@ -3,12 +3,12 @@ import time
 
 import jaxtyping
 import numpy as np
+import scipy.linalg
 from common import lp_problem
 from common.numpy_type_aliases import ArrayF, ArrayI
 
 import simplex_util
 from simplex_solutions import linear_algebra, pivoting_strategy
-import scipy.linalg
 from simplex_util import (
     INVERSE_RECOMPUTE_INTERVAL,
     NON_NEGATIVITY_TOLERANCE,
@@ -104,11 +104,12 @@ class DualSimplex:
         new_b = np.append(problem.rhs, big_m)
         new_c = np.append(problem.objective, 0.0)
 
-        augmented_problem = lp_problem.LpProblem(new_a, new_b, new_c)
+        augmented_problem = lp_problem.LpProblem(
+            constraint_matrix=new_a, rhs=new_b, objective=new_c
+        )
 
         # The new basis is the original basis B U {entering_variable}
         new_basis = np.append(basis, entering_variable)
-
         return augmented_problem, new_basis
 
     def _finalize_result(
