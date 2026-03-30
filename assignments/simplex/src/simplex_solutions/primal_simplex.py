@@ -9,6 +9,7 @@ from common.numpy_type_aliases import ArrayF, ArrayI
 from simplex_solutions import linear_algebra, pivoting_strategy
 from simplex_util import (
     INVERSE_RECOMPUTE_INTERVAL,
+    NON_NEGATIVITY_TOLERANCE,
     OPTIMALITY_TOL,
     InfeasibleLpError,
     IterationLimitError,
@@ -139,7 +140,7 @@ class PrimalSimplex:
 
         aux_vars_still_in_basis = [b for b in basis if not b < problem.num_variables]
         if aux_vars_still_in_basis:
-            raise SolveFailedError("Auxhiliary variables still present in the basis.")
+            raise SolveFailedError("Auxiliary variables still present in the basis.")
 
         return basis
 
@@ -217,7 +218,7 @@ class PrimalSimplex:
             reduced_costs = self._compute_reduced_costs(
                 problem, basis, non_basic_vars, inv_basis_matrix
             )
-            if np.all(reduced_costs >= -pivoting_strategy.PIVOTING_TOLERANCE):
+            if np.all(reduced_costs >= -NON_NEGATIVITY_TOLERANCE):
                 logger.info(
                     f"Simplex algorithm found optimal objective {self.solve_history_.objective_history[-1]} after {iteration - 1} iterations."
                 )
@@ -231,7 +232,7 @@ class PrimalSimplex:
             # d is the "basic direction" of the entering variable
             d = inv_basis_matrix @ problem.constraint_matrix[:, entering_variable]
 
-            if np.all(d <= 0):
+            if np.all(d <= pivoting_strategy.PIVOTING_TOLERANCE):
                 raise UnboundedLpError
 
             # Step 3: Determine the exiting variable
@@ -242,7 +243,7 @@ class PrimalSimplex:
             # Step 4: Update the inverse of the basis matrix (feel free to change input args to update_inverse if desirable)
             basis[basic_exiting_index] = entering_variable
 
-            if (iteration % INVERSE_RECOMPUTE_INTERVAL == 0):
+            if iteration % INVERSE_RECOMPUTE_INTERVAL == 0:
                 inv_basis_matrix = np.linalg.inv(problem.constraint_matrix[:, basis])
             else:
                 inv_basis_matrix = linear_algebra.update_inverse(

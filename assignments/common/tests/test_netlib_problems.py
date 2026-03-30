@@ -4,7 +4,7 @@ import pytest
 from common import lp_problem
 from common.netlib import load_netlib_problems
 from ipm_solutions import predictor_corrector
-from simplex_solutions import primal_simplex
+from simplex_solutions import dual_simplex, primal_simplex
 from simplex_solutions import pivoting_strategy
 
 # Database of known optimum values and recommended parameters
@@ -52,14 +52,27 @@ def test_netlib_ipm(name: str, cached_lp_problems: dict[str, lp_problem.LpProble
     assert np.isclose(obtained_optimum, optimum, rtol = 1e-4)
 
 @pytest.mark.parametrize("name", PROBLEMS_TO_TEST)
-def test_netlib_simplex(name: str, cached_lp_problems: dict[str, lp_problem.LpProblem]) -> None:
-    """Test the Simplex solver on a Netlib problem."""
+def test_netlib_primal_simplex(name: str, cached_lp_problems: dict[str, lp_problem.LpProblem]) -> None:
+    """Test the Primal Simplex solver on a Netlib problem."""
     lp = get_problem(name, cached_lp_problems)
     optimum = NETLIB_SOLUTIONS[name]["optimum"]
     iters = int(NETLIB_SOLUTIONS[name].get("simplex_iters", 1000))
     
-    simplex_solver = primal_simplex.PrimalSimplex(pivot_strategy=pivoting_strategy.BlandsRule())
-    solution = simplex_solver.solve(lp, max_iterations=iters)
+    primal_simplex_solver = primal_simplex.PrimalSimplex(pivot_strategy=pivoting_strategy.BlandsRule())
+    solution = primal_simplex_solver.solve(lp, max_iterations=iters)
+    
+    obtained_optimum = float(lp.objective.T @ solution.solution)
+    assert np.isclose(obtained_optimum, optimum)
+
+@pytest.mark.parametrize("name", PROBLEMS_TO_TEST)
+def test_netlib_dual_simplex(name: str, cached_lp_problems: dict[str, lp_problem.LpProblem]) -> None:
+    """Test the Dual Simplex solver on a Netlib problem."""
+    lp = get_problem(name, cached_lp_problems)
+    optimum = NETLIB_SOLUTIONS[name]["optimum"]
+    iters = int(NETLIB_SOLUTIONS[name].get("simplex_iters", 1000))
+    
+    dual_simplex_solver = dual_simplex.DualSimplex(pivot_strategy=pivoting_strategy.DualBlandsRule())
+    solution = dual_simplex_solver.solve(lp, max_iterations=iters)
     
     obtained_optimum = float(lp.objective.T @ solution.solution)
     assert np.isclose(obtained_optimum, optimum)

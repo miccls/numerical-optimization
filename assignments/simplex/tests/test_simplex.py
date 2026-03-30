@@ -8,8 +8,12 @@ from common import lp_problem
 from common.numpy_type_aliases import ArrayI
 from pytest_unordered import unordered
 
-from simplex_solutions import linear_algebra, pivoting_strategy, primal_simplex
-from simplex_solutions.dual_simplex import DualSimplex
+from simplex_solutions import (
+    dual_simplex,
+    linear_algebra,
+    pivoting_strategy,
+    primal_simplex,
+)
 from simplex_util import InfeasibleLpError, SimplexCyclingError, UnboundedLpError
 
 if TYPE_CHECKING:
@@ -173,7 +177,9 @@ def problem_with_auxvars_left_in_basis() -> lp_problem.LpProblem:
 
 
 class TestFindingInitialBasis:
-    def test_pivot_out_auxiliary(self, problem_with_auxvars_left_in_basis: lp_problem.LpProblem) -> None:
+    def test_pivot_out_auxiliary(
+        self, problem_with_auxvars_left_in_basis: lp_problem.LpProblem
+    ) -> None:
         basis = primal_simplex.purge_aux_vars(
             problem_with_auxvars_left_in_basis, np.array([3, 4, 5]), 3
         )
@@ -196,14 +202,18 @@ class TestSolver:
         )
         assert (x >= 0).all()
 
-        solve_result = primal_simplex.PrimalSimplex().solve(example_problem_35, initial_basis=basis)
+        solve_result = primal_simplex.PrimalSimplex().solve(
+            example_problem_35, initial_basis=basis
+        )
 
         assert sorted(solve_result.basis) == [0, 1, 2]
         assert solve_result.solution == pytest.approx(np.array([4, 4, 4, 0, 0, 0]))
         assert solve_result.objective_value == pytest.approx(-136)
 
     def test_find_initial_basis(self, example_problem_35: lp_problem.LpProblem) -> None:
-        assert sorted(primal_simplex.PrimalSimplex().find_initial_basis(example_problem_35)) == [
+        assert sorted(
+            primal_simplex.PrimalSimplex().find_initial_basis(example_problem_35)
+        ) == [
             0,
             1,
             2,
@@ -245,7 +255,13 @@ class TestSolver:
             lp_problem.LpProblem(a, b, c), initial_basis=initial_basis
         ).objective_value == pytest.approx(-1.0)
 
-    def test_infeasible_problem(self) -> None:
+    @pytest.mark.parametrize(
+        "solver",
+        [primal_simplex.PrimalSimplex, dual_simplex.DualSimplex],
+    )
+    def test_infeasible_problem(
+        self, solver: type[primal_simplex.PrimalSimplex | dual_simplex.DualSimplex]
+    ) -> None:
         # min -x1 s.t. x1 <= 1, x1 >= 2
         # Standard form: x1 + s1 = 1, x1 - s2 = 2
         a = np.array([[1, 1, 0], [1, 0, -1]], dtype=float)
@@ -254,9 +270,15 @@ class TestSolver:
 
         test_problem = lp_problem.LpProblem(a, b, c)
         with pytest.raises(InfeasibleLpError):
-            primal_simplex.PrimalSimplex().solve(test_problem)
+            solver().solve(test_problem)
 
-    def test_unbounded_problem(self) -> None:
+    @pytest.mark.parametrize(
+        "solver",
+        [primal_simplex.PrimalSimplex, dual_simplex.DualSimplex],
+    )
+    def test_unbounded_problem(
+        self, solver: type[primal_simplex.PrimalSimplex | dual_simplex.DualSimplex]
+    ) -> None:
         # min -2*x1 - x2 s.t. x1 - x2 <= 10, 2*x1 <= 40
         # Standard form: x1 - x2 + s1 = 10, 2*x1 + s2 = 40
         a = np.array([[1, -1, 1, 0], [2, 0, 0, 1]], dtype=float)
@@ -265,7 +287,7 @@ class TestSolver:
 
         test_problem = lp_problem.LpProblem(a, b, c)
         with pytest.raises(UnboundedLpError):
-            primal_simplex.PrimalSimplex().solve(test_problem)
+            solver().solve(test_problem)
 
     def test_example_13_1_from_book(
         self, example_problem_131: tuple[lp_problem.LpProblem, ArrayI]
@@ -295,11 +317,109 @@ class TestSolver:
         )
         assert solve_result.objective_value == pytest.approx(-52 / 3)
 
-class TestDualPivoting:
-    # TODO(martins) Do these tests
-    # TODO(martins) Also, keep writing tests to futher
-    # your understanding. First when you have a lot of tests,
-    # continue with implementation of Dual simplex.
-    # After dual simplex is done, fix presolve!
-    def test_dual_blands_rule(self) -> None:
-        pass
+
+class TestDualBlandsRule:
+    def test_exiting_index(self) -> None:
+
+        # Out of all negative primal vars, -10.4 has the smallest basic index which is 3
+        primal_vars = np.array([1.2, 3.4, -1.02, 3.2, -10.4, -11.46, -0.4, 12.2])
+        basis = np.array([20, 1, 6, 100, 3, 17, 9, 12])
+        dual_blands_rule = pivoting_strategy.DualBlandsRule()
+
+        assert basis[dual_blands_rule.pick_exiting_index(primal_vars, basis)] == 3
+
+    def test_entering_index(self) -> None:
+        s = np.array([1.2, 3.4, 0.4, 10.2])
+        non_basic_vars = np.array([3, 2, 1, 10])
+        change_in_s_due_to_entering_index = np.array([-0.01, 1.2, 0.001, -1.0])
+
+        dual_blands_rule = pivoting_strategy.DualBlandsRule()
+        assert (
+            dual_blands_rule.pick_entering_index(
+                non_basic_vars, s, change_in_s_due_to_entering_index
+            )
+            == 1
+        )
+
+
+class TestDualSolve:
+    def test_problem_without_start_solution(
+        self, example_problem_35: lp_problem.LpProblem
+    ) -> None:
+        # The optimal basis for problem 35 is 0, 1, 2.
+        # This corresponds to solution 4, 4, 4, 0, 0, 0
+        # By adding a constraint that x_0 + 3*x_1 + 3*x_2 < 4
+        # we have a dual feasible starting point which is primal infeasible.
+        # The new optimum should then be 4, 0, 0, 0, 0, 0
+        # We can find an optimal basis for the dual by adding a slack
+        # for this constraint and having that + the previous optimal
+        # basis in the starting basis for the dual simplex
+
+        # So we need to add a slack variable with 0 in the objective
+        # And a row with 1, 3, 3, 0, 0, 0, 1
+        # Also, we need to pad the other constraint rows with zeros for the new slack var.
+        a = example_problem_35.constraint_matrix
+        b = example_problem_35.rhs
+        c = example_problem_35.objective
+        a = np.pad(a, ((0, 1), (0, 1)))
+
+        a[-1, :] = np.array([1, 3, 3, 0, 0, 0, 1])
+        c = np.pad(c, (0, 1))
+        b = np.pad(b, (0, 1), constant_values=4.0)
+        amended_problem = lp_problem.LpProblem(constraint_matrix=a, rhs=b, objective=c)
+
+        solution_by_primal = primal_simplex.PrimalSimplex(
+            pivot_strategy=pivoting_strategy.BlandsRule()
+        ).solve(amended_problem)
+        assert solution_by_primal.objective_value == pytest.approx(-40)
+
+        dual_simplex_solver = dual_simplex.DualSimplex(
+            pivot_strategy=pivoting_strategy.DualBlandsRule()
+        )
+
+        initial_basis = np.array([0, 1, 2, 6])
+        solution_by_dual = dual_simplex_solver.solve(
+            amended_problem, 100, initial_basis
+        )
+        assert solution_by_dual.objective_value == pytest.approx(-40)
+        assert np.allclose(solution_by_dual.solution, solution_by_primal.solution)
+
+
+class TestDualPhaseOne:
+    def test_artificial_problem_setup(
+        self, example_problem_35: lp_problem.LpProblem
+    ) -> None:
+        solver = dual_simplex.DualSimplex()
+        aug_prob, basis = solver._setup_artificial_problem(example_problem_35)
+
+        assert aug_prob.constraint_matrix.shape == (4, 7)
+        assert len(basis) == 4
+
+        inv_basis_matrix = np.linalg.inv(aug_prob.constraint_matrix[:, basis])
+        lam = inv_basis_matrix.T @ aug_prob.objective[basis]
+        non_basic_vars = np.array([v for v in range(7) if v not in basis])
+        s_non_basic = aug_prob.objective[non_basic_vars] - (
+            aug_prob.constraint_matrix[:, non_basic_vars].T @ lam
+        )
+        assert np.all(s_non_basic >= -1e-6)
+
+    def test_dual_solve_without_initial_basis(
+        self, example_problem_35: lp_problem.LpProblem
+    ) -> None:
+        solver = dual_simplex.DualSimplex()
+        result = solver.solve(example_problem_35)
+
+        assert result.objective_value == pytest.approx(-136)
+        assert result.solution == pytest.approx(np.array([4, 4, 4, 0, 0, 0]))
+        assert sorted(result.basis) == [0, 1, 2]
+
+    def test_dual_solve_unbounded(self) -> None:
+        a = np.array([[1.0, -1.0, 1.0]], dtype=float)
+        b = np.array([10.0], dtype=float)
+        c = np.array([-1.0, -1.0, 0.0], dtype=float)
+
+        problem = lp_problem.LpProblem(a, b, c)
+        solver = dual_simplex.DualSimplex()
+
+        with pytest.raises(UnboundedLpError):
+            solver.solve(problem)

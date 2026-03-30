@@ -68,7 +68,7 @@ class DualPivotingStrategy(ABC):
         ...
 
     @abstractmethod
-    def pick_entering_index( #TODO(martins): Come up with better names
+    def pick_entering_index(  # TODO(martins): Come up with better names
         self,
         non_basic_vars: jaxtyping.Int[ArrayI, " m"],
         s: jaxtyping.Float[ArrayF, " m"],
@@ -143,6 +143,7 @@ class DantzigsRule(PrimalPivotingStrategy):
     ) -> int:
         return index_of_smallest_ratio(basis, x_basis, basic_direction)
 
+
 class DualBlandsRule(DualPivotingStrategy):
     @override
     def pick_exiting_index(
@@ -150,10 +151,17 @@ class DualBlandsRule(DualPivotingStrategy):
         primal_vars: jaxtyping.Float[ArrayF, " num_basic"],
         basic_vars: jaxtyping.Int[ArrayI, " num_basic"],
     ) -> int:
-        return int(basic_vars[primal_vars < -PIVOTING_TOLERANCE].min())
+        negative_basic_vars = [
+            (variable_index, basis_index, var)
+            for (basis_index, var), variable_index in zip(
+                enumerate(primal_vars), basic_vars, strict=True
+            )
+            if var < -PIVOTING_TOLERANCE
+        ]
+        return min(negative_basic_vars)[1]
 
     @override
-    def pick_entering_index( #TODO(martins): Come up with better names
+    def pick_entering_index(
         self,
         non_basic_vars: jaxtyping.Int[ArrayI, " m"],
         s: jaxtyping.Float[ArrayF, " m"],
