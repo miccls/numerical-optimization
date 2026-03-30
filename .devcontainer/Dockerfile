@@ -56,6 +56,10 @@ apt-get install -y --no-install-recommends \
     texlive-bibtex-extra \
     latexmk \
     biber \
+    texlive-extra-utils \
+    libyaml-tiny-perl \
+    libfile-homedir-perl \
+    libunicode-linebreak-perl
 
 # Clean up apt cache
 apt-get clean
