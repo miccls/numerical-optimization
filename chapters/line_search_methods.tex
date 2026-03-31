@@ -8,54 +8,42 @@ Therefore, I thought I would introduce them both here before moving on to solvin
 The selected exercises for this chapter are 3.2, 3.5, 3.7 and 3.8.
 
 \subsubsection{Exercise 3.2}
-% Use graphical argument and intuition around the conditions.
-
 The Wolfe conditions are the following two inequalities
-\begin{align*}
-    f(x_k + \alpha p_k)              & \leq f(x_k) + \alpha c_1 \nabla f(x_k)^T p_k \quad \textit{(Sufficient decrease condition)} \\
-    \nabla f(x_k + \alpha p_k)^T p_k & \geq c_2 \nabla f(x_k)^T p_k  \quad \textit{(Curvature condition)}
-\end{align*}
-for $0 < c_1 < c_2 1$.
-In this exercise we are to show that if $c_2 < c_1$ there are situations where no step length $\alpha$ satisfies both conditions.
-
-The first condition essentially says that the average slope between $0$ and $\alpha$ should be at most $c_1 \phi(0)$ while the second condition says that the slope at $\alpha$ should be a least $c_2 \phi'(0)$ ($c_2 \times$ the slope at $\phi(0)$).
-If $c_2 < c_1$ we can come up with situations where this cannot hold.
-
-Consider a differentiable convex function,\footnote{$f\in C^1(\mathbb{R}) \cap \operatorname{Conv}(\mathbb{R})$ would be the most common set-theoretic notation found in literature on mathematical programming.}
-Such functions by the property that
-\[
-    f(x + \alpha) \geq f(x) + \alpha f'(x).
-\]
-In words, \textit{a differentiable function of one variable is convex if its graph lies above all of it's tangents.}
-
-If we assume $p_k$ is a descent direction (i.e. $\phi'(0) < 0$), we have
-\begin{align*}
-    \phi(\alpha)                          & \leq \phi(0) + \alpha c_1 \phi'(0) \\
-    \frac{\phi(\alpha) - \phi(0)}{\alpha} & \leq c_1 \phi'(0)
-\end{align*}
-By the mean value theorem, there exists a $\xi \in (0, \alpha)$ for which $\phi'(\xi)$ is equal to the LHS (average slope).
-\begin{align}
-    \phi'(\xi) \leq c_1 \phi'(0) \nonumber \\
-    \frac{\phi'(\xi)}{\phi'(0)} \geq c_1
-    \label{eq:condition_on_c1}
-\end{align}
-
-Since $f$, and thus $\phi$, is convex and $\xi < \alpha$,
-\[
-    c_1 \leq \frac{\phi'(\xi)}{\phi'(0)} \le \frac{\phi'(\alpha)}{\phi'(0)}
-\]
-
-Now, the curvature condition is the following
 \begin{equation}
-    \phi'(\alpha) \geq c_2\phi'(0) \implies \frac{\phi'(\alpha)}{\phi'(0)} \leq c_2
-    \label{eq:condition_on_c2}
+    \begin{aligned}
+        f(x_k + \alpha p_k)              & \leq f(x_k) + \alpha c_1 \nabla f(x_k)^T p_k \quad \textit{(Sufficient decrease condition)} \\
+        \nabla f(x_k + \alpha p_k)^T p_k & \geq c_2 \nabla f(x_k)^T p_k  \quad \textit{(Curvature condition)}
+    \end{aligned}
+    \label{eq:wolfe_conditions}
 \end{equation}
+for $0 < c_1 < c_2 < 1$.
+Let us find a situation where $c_2 < c_1$ implies no nonzero step length is possible.
+We begin by first restating the Wolfe conditions in terms of $\phi(\alpha) := f(x_k + \alpha p_k)$
 
-Combining \eqref{eq:condition_on_c1}, \eqref{eq:condition_on_c2} we get
+\begin{align*}
+    \phi(\alpha)  & \leq \phi(0) + \alpha c_1 \phi'(0) \\
+    \phi'(\alpha) & \geq c_2 \phi'(0)
+\end{align*}
+
+If we assume for example that $\phi(\alpha) = -\alpha + \alpha^2$, these conditions become
+\begin{align*}
+    -\alpha + \alpha^2   \leq -\alpha c_1 \implies \alpha & \leq 1 - c_1           \\
+    -1 + 2\alpha  \geq -c_2 \implies \alpha               & \geq \frac{1 - c_2}{2}
+\end{align*}
+
+These imply the chained inequality
 \[
-    c_1 \leq c_2
+    \frac{1 - c_2}{2} \leq \alpha \leq 1 - c_1
 \]
-which is in direct contradiction with $c_2 < c_1$. That is, for convex functions, there are no valid step lengths satisfying the Wolfe conditions if $c_2 < c_1$.
+These inequalities doesn't rule out all values of $c_2 < c_1$, take $c_2 = 0.5, c_1 = 0.6$ for example
+\[
+    0.25 \leq \alpha \leq 0.4
+\]
+but for a large difference, $c_2 = 0.1, c_1 = 0.9$,
+\[
+    0.45 \leq \alpha \leq 0.1
+\]
+no step size is admissible.
 
 \subsubsection{Exercise 3.5}
 \subsubsection{Exercise 3.7}
