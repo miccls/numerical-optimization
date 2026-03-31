@@ -45,6 +45,54 @@ but for a large difference, $c_2 = 0.1, c_1 = 0.9$,
 \]
 no step size is admissible.
 
+
+To generalize the proof for a broader class of convex functions, we parameterize a ``general'' convex function by defining its limits on curvature. Instead of looking at a specific function, we study a set of functions which are $m$-strongly convex and are $L$-smooth.
+These properties mean that $\phi''$ has some lower bound and upper bounds. The lower bound is $m$ (m-strongly convex) and the upper bound is $L$ (L-smooth means the gradient is Lipschitz continuous):
+\[
+    0 < m \leq \phi''(\alpha) \leq L
+\]
+Since $p_k$ is a descent direction, we also know $\phi'(0) < 0$.
+Because $\phi(\alpha)$ is $m$-strongly convex, we can bound the function from below using a Taylor expansion:
+\[
+    \phi(\alpha) \geq \phi(0) + \alpha \phi'(0) + \frac{m}{2}\alpha^2
+\]
+Replacing $\phi(\alpha)$ in the sufficient decrease condition with this lower bound,
+\begin{align*}
+    \phi(0) + \alpha \phi'(0) + \frac{m}{2}\alpha^2 & \leq \phi(0) + \alpha c_1 \phi'(0) \\
+    \frac{m}{2}\alpha^2                             & \leq \alpha \phi'(0)(c_1 - 1)
+\end{align*}
+Since $\alpha > 0$, we can divide by $\alpha$:
+\[
+    \frac{m}{2}\alpha \leq \phi'(0)(c_1 - 1) \implies \alpha \leq \frac{2(c_1 - 1)\phi'(0)}{m}
+\]
+This is the maximum possible step size allowed by the sufficent decrease condition for this class of functions.
+Because $\phi(\alpha)$ is $L$-smooth, its derivative cannot increase faster than $L$. We can bound the slope from above:
+\[
+    \phi'(\alpha) \leq \phi'(0) + L\alpha
+\]
+For the curvature condition to hold, the slope $\phi'(\alpha)$ must be greater than or equal to $c_2 \phi'(0)$. Therefore, our upper bound on the slope must also satisfy this:
+\[
+    \phi'(0) + L\alpha \geq c_2 \phi'(0)
+\]
+Rearranging for $\alpha$:
+\[
+    \alpha \geq \frac{(c_2 - 1)\phi'(0)}{L}
+\]
+
+This is the minimum possible step size required by the curvature condition.
+An admissible step length $\alpha$ must satisfy both bounds simultaneously. Setting up the chained inequality:
+\[
+    \frac{(c_2 - 1)\phi'(0)}{L} \leq \alpha \leq \frac{2(c_1 - 1)\phi'(0)}{m}
+\]
+Removing the middle inequalities with $\alpha$ and dividing by $\phi'(0)$, we can see the relationship between $c_1$ and $c_2$:
+\[
+    \frac{c_2 - 1}{L} \geq \frac{2(c_1 - 1)}{m}
+\]
+Let's multiply both sides by $m/2$. In optimization, the ratio $\kappa = \frac{L}{m}$ is known as the condition number of the function ($\kappa \geq 1$). This gives us the admissibility rule:
+\[
+    c_1 - 1 \leq \frac{c_2 - 1}{2\kappa}
+\]
+
 \subsubsection{Exercise 3.5}
 \subsubsection{Exercise 3.7}
 \subsubsection{Exercise 3.8}
