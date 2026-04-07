@@ -13,6 +13,7 @@ from simplex_util import (
     INVERSE_RECOMPUTE_INTERVAL,
     NON_NEGATIVITY_TOLERANCE,
     SolveHistory,
+    get_non_basic_vars,
 )
 
 logger = logging.getLogger(__name__)
@@ -79,7 +80,7 @@ class DualSimplex:
         basis = p[:m]
 
         inv_basis_matrix = np.linalg.inv(problem.constraint_matrix[:, basis])
-        non_basic_vars = np.array([v for v in range(n) if v not in basis])
+        non_basic_vars = get_non_basic_vars(problem.num_variables, basis)
 
         lam = inv_basis_matrix.T @ problem.objective[basis]
         s_non_basic = problem.objective[non_basic_vars] - (
@@ -171,9 +172,7 @@ class DualSimplex:
         start = time.time()
 
         for iteration in range(1, max_iterations):
-            non_basic_vars = np.array(
-                [v for v in range(problem.num_variables) if v not in basis]
-            )
+            non_basic_vars = get_non_basic_vars(problem.num_variables, basis)
 
             # Check for optimality
             if np.all(x_basis >= -NON_NEGATIVITY_TOLERANCE):

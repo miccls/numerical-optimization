@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 import jaxtyping
+import numpy as np
 from common.numpy_type_aliases import ArrayF, ArrayI
 
 
@@ -34,7 +35,7 @@ class IterationLimitError(SolveFailedError):
 MIN_CYCLE_LEN = 2
 OBJECTIVE_IMPROVEMENT_TOL = 1e-9
 OPTIMALITY_TOL = 1e-9
-NON_NEGATIVITY_TOLERANCE = 1e-9
+NON_NEGATIVITY_TOLERANCE = 1e-6
 INVERSE_RECOMPUTE_INTERVAL = 1000
 
 
@@ -73,3 +74,20 @@ class SolveHistory:
                 f"Basis cycle of length {len(self.basis_cycle_)} detected"
             )
         self.basis_cycle_.add(basis_signature)
+
+
+def get_non_basic_vars(
+    num_variables: int, basis: jaxtyping.Int[ArrayI, "f{num_variables} - m"]
+) -> jaxtyping.Int[ArrayI, " m"]:
+    """
+    Helper function to pick out the non basic variables.
+    An important note for performance, if the set is computed inside
+    the list comprehension as
+
+        [i for i in range(num_variables) if i not in set(basis_set)]
+
+    This has severe impacts on performance as python is not smart enough to not
+    recompute the set every iteration.
+    """
+    basis_set = set(basis)
+    return np.array([i for i in range(num_variables) if i not in basis_set])

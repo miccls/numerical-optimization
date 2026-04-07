@@ -62,7 +62,9 @@ class PredictorCorrector:
         point = calculate_starting_point(problem)
 
         logger.info("                Objective              Residual")
-        logger.info("Iter       Primal       Dual       Primal      Dual     Compl       Time")
+        logger.info(
+            "Iter       Primal       Dual       Primal      Dual     Compl       Time"
+        )
 
         iteration = 0
         start_time = time.time()

@@ -17,6 +17,7 @@ from simplex_util import (
     SolveHistory,
     SolveResult,
     UnboundedLpError,
+    get_non_basic_vars,
 )
 
 logger = logging.getLogger(__name__)
@@ -115,7 +116,7 @@ class PrimalSimplex:
             ),
         )
         # Use the smallest subscript rule to hopefully basis containing the original variables
-        phase_one_solver = PrimalSimplex(pivot_strategy=pivoting_strategy.BlandsRule())
+        phase_one_solver = PrimalSimplex(pivot_strategy=self.pivoting_strategy_)
         phase_one_result = phase_one_solver.solve(
             phase_one_problem,
             initial_basis=np.array(
@@ -209,9 +210,7 @@ class PrimalSimplex:
         logger.info("Iter     Objective      Primal Inf.    Dual Inf.    Time")
         start = time.time()
         for iteration in range(1, max_iterations):
-            non_basic_vars = np.array(
-                [i for i in range(problem.num_variables) if i not in set(basis)]
-            )
+            non_basic_vars = get_non_basic_vars(problem.num_variables, basis)
 
             # Step 1: Compute reduced costs
             # TODO(you): set to the correct reduced costs
