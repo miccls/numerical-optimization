@@ -59,8 +59,8 @@ class DualPivotingStrategy(ABC):
     @abstractmethod
     def pick_exiting_index(
         self,
-        primal_vars: jaxtyping.Float[ArrayF, " num_nonbasic"],
-        basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
+        primal_vars: jaxtyping.Float[ArrayF, " m"],
+        basic_vars: jaxtyping.Int[ArrayI, " m"],
     ) -> int:
         """
         TODO(martins): Describe purpose of picking entering index
@@ -68,14 +68,14 @@ class DualPivotingStrategy(ABC):
         ...
 
     @abstractmethod
-    def pick_entering_index(  # TODO(martins): Come up with better names
+    def pick_entering_index(
         self,
-        non_basic_vars: jaxtyping.Int[ArrayI, " m"],
-        s: jaxtyping.Float[ArrayF, " m"],
-        pivot_direction: jaxtyping.Float[ArrayF, " m"],
+        non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
+        s: jaxtyping.Float[ArrayF, " num_nonbasic"],
+        pivot_direction: jaxtyping.Float[ArrayF, " num_nonbasic"],
     ) -> int:
         """
-        TODO(martins): Describe purpose of exiting index
+        TODO(martins): Describe purpose of picking exiting index
         """
         ...
 
@@ -148,8 +148,8 @@ class DualBlandsRule(DualPivotingStrategy):
     @override
     def pick_exiting_index(
         self,
-        primal_vars: jaxtyping.Float[ArrayF, " num_basic"],
-        basic_vars: jaxtyping.Int[ArrayI, " num_basic"],
+        primal_vars: jaxtyping.Float[ArrayF, " m"],
+        basic_vars: jaxtyping.Int[ArrayI, " m"],
     ) -> int:
         negative_basic_vars = [
             (variable_index, basis_index, var)

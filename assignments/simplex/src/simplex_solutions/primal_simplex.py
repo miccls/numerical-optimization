@@ -145,10 +145,6 @@ class PrimalSimplex:
 
         return basis
 
-        # TODO(you): Set up an auxiliary LP whose solution is a basic feasible solution to the original problem
-        # See page 378 in the book, for example.
-        # return np.zeros(problem.constraint_matrix.shape[0], dtype=int)
-
     def _compute_reduced_costs(
         self,
         problem: lp_problem.LpProblem,
@@ -239,7 +235,7 @@ class PrimalSimplex:
                 basis, x_basis, d
             )
 
-            # Step 4: Update the inverse of the basis matrix (feel free to change input args to update_inverse if desirable)
+            # Step 4: Update the inverse of the basis matrix
             basis[basic_exiting_index] = entering_variable
 
             if iteration % INVERSE_RECOMPUTE_INTERVAL == 0:
@@ -250,10 +246,9 @@ class PrimalSimplex:
                     inv_basis_matrix,
                     entering_variable,
                     basic_exiting_index,
-                )  # <-- TODO in here.
+                )
 
             # Step 5: Update the basic solution from the basic direction
-            # TODO(you): ...
             x_entering = float(x_basis[basic_exiting_index] / d[basic_exiting_index])
             x_basis -= x_entering * d
             x_basis[basic_exiting_index] = x_entering

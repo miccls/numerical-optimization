@@ -42,12 +42,12 @@ def purge_aux_vars(
 
 
 class PrimalSimplex:
-    pivoting_strategy_: pivoting_strategy.PivotingStrategy
+    pivoting_strategy_: pivoting_strategy.PrimalPivotingStrategy
     solve_history_: SolveHistory
 
     def __init__(
         self,
-        pivot_strategy: pivoting_strategy.PivotingStrategy | None = None,
+        pivot_strategy: pivoting_strategy.PrimalPivotingStrategy | None = None,
     ) -> None:
         if pivot_strategy is not None:
             self.pivoting_strategy_ = pivot_strategy
