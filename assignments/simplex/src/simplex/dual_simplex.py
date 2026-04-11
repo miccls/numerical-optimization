@@ -38,6 +38,26 @@ class DualSimplex:
     ) -> tuple[lp_problem.LpProblem, jaxtyping.Int[ArrayI, " m+1"]]:
         """
         Sets up the problem for a Phase 1 Dual Simplex by adding a single artificial constraint.
+
+        This method handles problems where an initial basis is not dual-feasible by adding one
+        artificial constraint and one artificial variable. This allows us to perform a "magic pivot"
+        that immediately yields a dual-feasible basis.
+
+        Mathematical Formulation:
+        1. Start with an arbitrary basis B and compute its reduced costs s.
+        2. If some s_k < 0, the basis is not dual-feasible.
+        3. Augment the primal problem with a new constraint:
+           \\sum_{j \\notin B} x_j + x_{art} = M
+           where x_{art} is an artificial slack variable with cost 0, and M is a large scalar.
+        4. The initial basis for this augmented problem is B U {x_{art}}.
+        5. We force x_{art} to exit the basis and x_k (where k = argmin(s)) to enter. This is the "magic pivot".
+           Because the artificial row has a coefficient of 1 for all non-basic variables, pivoting
+           on it subtracts s_k from all reduced costs: s_j' = s_j - s_k.
+           Since s_k is the minimum reduced cost, s_j' >= 0 for all j, making the new basis
+           B U {x_k} strictly dual-feasible!
+
+        For reference, this is commonly known as the "Single Artificial Constraint" method
+        for the dual simplex method.
         """
         # TODO(you): Implement the setup for the artificial problem to find a dual-feasible basis.
         m, _ = problem.constraint_matrix.shape
