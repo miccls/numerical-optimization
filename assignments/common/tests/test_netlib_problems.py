@@ -4,7 +4,7 @@ import pytest
 from common import lp_problem
 from common.netlib import load_netlib_problems
 from ipm_solutions import predictor_corrector
-from simplex_solutions import solver
+from simplex_solutions import dual_simplex, primal_simplex
 from simplex_solutions import pivoting_strategy
 
 # Database of known optimum values and recommended parameters
@@ -13,21 +13,34 @@ NETLIB_SOLUTIONS = {
     "afiro": {"optimum": -464.75, "simplex_iters": 100},
     "adlittle": {"optimum": 225494.963160, "simplex_iters": 1000},
     "bandm": {"optimum": -158.62801845, "simplex_iters": 100000},
-    "scsd1" : {"optimum": 8.6666666, "simplex_iters" : 100000}, # IPM won't quite reach all the way on this one. OK for simplex
-    "scsd6" : {"optimum": 5.050000e1, "simplex_iters" : 100000}, # Takes forever in simplex
-    "scsd8" : {"optimum": 9.049999e2, "simplex_iters" : 100000}, # Takes forever in simplex also
-    "stocfor2" : {"optimum": -3.90244085e+04, "simplex_iters" : 100000}
+    "scsd1": {
+        "optimum": 8.6666666,
+        "simplex_iters": 100000,
+    },  # IPM won't quite reach all the way on this one. OK for simplex
+    "scsd6": {
+        "optimum": 5.050000e1,
+        "simplex_iters": 100000,
+    },  # Takes forever in simplex
+    "scsd8": {
+        "optimum": 9.049999e2,
+        "simplex_iters": 100000,
+    },  # Takes forever in simplex also
+    "stocfor2": {"optimum": -3.90244085e04, "simplex_iters": 100000},
 }
 
 # Add problem names to this list to test them (if they are in NETLIB_SOLUTIONS)
 PROBLEMS_TO_TEST = ["afiro", "adlittle", "bandm", "scsd1", "scsd6", "scsd8", "stocfor2"]
+
 
 @pytest.fixture(scope="module")
 def cached_lp_problems() -> dict[str, lp_problem.LpProblem]:
     """Cache for downloaded and converted LP problems to avoid multiple downloads."""
     return {}
 
-def get_problem(name: str, cache: dict[str, lp_problem.LpProblem]) -> lp_problem.LpProblem:
+
+def get_problem(
+    name: str, cache: dict[str, lp_problem.LpProblem]
+) -> lp_problem.LpProblem:
     """Helper to fetch or download/parse a Netlib problem."""
     if name not in cache:
         res = load_netlib_problems.download_and_parse_mps(name)
@@ -39,27 +52,53 @@ def get_problem(name: str, cache: dict[str, lp_problem.LpProblem]) -> lp_problem
         cache[name] = lp_problem.LpProblem(a_std, b_std, c_std)
     return cache[name]
 
+
 @pytest.mark.parametrize("name", PROBLEMS_TO_TEST)
-def test_netlib_ipm(name: str, cached_lp_problems: dict[str, lp_problem.LpProblem]) -> None:
+def test_netlib_ipm(
+    name: str, cached_lp_problems: dict[str, lp_problem.LpProblem]
+) -> None:
     """Test the IPM solver on a Netlib problem."""
     lp = get_problem(name, cached_lp_problems)
     optimum = NETLIB_SOLUTIONS[name]["optimum"]
-    
+
     ipm_solver = predictor_corrector.PredictorCorrector(10000, 1e-9)
     solution = ipm_solver.solve(lp)
-    
+
     obtained_optimum = float(lp.objective.T @ solution.x)
-    assert np.isclose(obtained_optimum, optimum, rtol = 1e-4)
+    assert np.isclose(obtained_optimum, optimum, rtol=1e-4)
+
 
 @pytest.mark.parametrize("name", PROBLEMS_TO_TEST)
-def test_netlib_simplex(name: str, cached_lp_problems: dict[str, lp_problem.LpProblem]) -> None:
-    """Test the Simplex solver on a Netlib problem."""
+def test_netlib_primal_simplex(
+    name: str, cached_lp_problems: dict[str, lp_problem.LpProblem]
+) -> None:
+    """Test the Primal Simplex solver on a Netlib problem."""
     lp = get_problem(name, cached_lp_problems)
     optimum = NETLIB_SOLUTIONS[name]["optimum"]
     iters = int(NETLIB_SOLUTIONS[name].get("simplex_iters", 1000))
-    
-    simplex_solver = solver.Solver(pivot_strategy=pivoting_strategy.BlandsRule())
-    solution = simplex_solver.solve(lp, max_iterations=iters)
-    
+
+    primal_simplex_solver = primal_simplex.PrimalSimplex(
+        pivot_strategy=pivoting_strategy.DantzigsRule()
+    )
+    solution = primal_simplex_solver.solve(lp, max_iterations=iters)
+
+    obtained_optimum = float(lp.objective.T @ solution.solution)
+    assert np.isclose(obtained_optimum, optimum)
+
+
+@pytest.mark.parametrize("name", PROBLEMS_TO_TEST)
+def test_netlib_dual_simplex(
+    name: str, cached_lp_problems: dict[str, lp_problem.LpProblem]
+) -> None:
+    """Test the Dual Simplex solver on a Netlib problem."""
+    lp = get_problem(name, cached_lp_problems)
+    optimum = NETLIB_SOLUTIONS[name]["optimum"]
+    iters = int(NETLIB_SOLUTIONS[name].get("simplex_iters", 1000))
+
+    dual_simplex_solver = dual_simplex.DualSimplex(
+        pivot_strategy=pivoting_strategy.DualBlandsRule()
+    )
+    solution = dual_simplex_solver.solve(lp, max_iterations=iters)
+
     obtained_optimum = float(lp.objective.T @ solution.solution)
     assert np.isclose(obtained_optimum, optimum)

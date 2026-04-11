@@ -1,6 +1,5 @@
 import logging
 import time
-from dataclasses import dataclass
 
 import jaxtyping
 import numpy as np
@@ -8,78 +7,20 @@ from common import lp_problem
 from common.numpy_type_aliases import ArrayF, ArrayI
 
 from simplex_solutions import linear_algebra, pivoting_strategy
+from simplex_util import (
+    INVERSE_RECOMPUTE_INTERVAL,
+    NON_NEGATIVITY_TOLERANCE,
+    OPTIMALITY_TOL,
+    InfeasibleLpError,
+    IterationLimitError,
+    SolveFailedError,
+    SolveHistory,
+    SolveResult,
+    UnboundedLpError,
+    get_non_basic_vars,
+)
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class SolveResult:
-    basis: jaxtyping.Int[ArrayI, " m"]
-    solution: jaxtyping.Float[ArrayF, " n"]
-    objective_value: float
-
-
-class SolveFailedError(RuntimeError):
-    pass
-
-
-class InfeasibleLpError(SolveFailedError):
-    pass
-
-
-class UnboundedLpError(SolveFailedError):
-    pass
-
-
-class SimplexCyclingError(SolveFailedError):
-    pass
-
-
-class IterationLimitError(SolveFailedError):
-    pass
-
-
-MIN_CYCLE_LEN = 2
-OBJECTIVE_IMPROVEMENT_TOL = 1e-9
-OPTIMALITY_TOL = 1e-9
-INVERSE_RECOMPUTE_INTERVAL = 1000
-
-
-class SolveHistory:
-    def __init__(self) -> None:
-        self.basis_: list[tuple[int, ...]] = []
-        self.objective_: list[float] = []
-        self.basis_cycle_: set[tuple[int, ...]] = set()
-
-    @property
-    def basis_history(self) -> list[tuple[int, ...]]:
-        return self.basis_
-
-    @property
-    def objective_history(self) -> list[float]:
-        return self.objective_
-
-    def update(
-        self, basis: jaxtyping.Int[ArrayI, " m"], objective_value: float
-    ) -> None:
-        self.objective_.append(objective_value)
-
-        if (
-            len(self.objective_) > 1
-            and abs(self.objective_[-1] - self.objective_[-2])
-            > OBJECTIVE_IMPROVEMENT_TOL
-        ):
-            # If the objective improved, we are not cycling, so we can clear the history.
-            self.basis_cycle_.clear()
-
-        basis_signature = tuple(int(b) for b in sorted(basis))
-        self.basis_.append(basis_signature)
-
-        if basis_signature in self.basis_cycle_:
-            raise SimplexCyclingError(
-                f"Basis cycle of length {len(self.basis_cycle_)} detected"
-            )
-        self.basis_cycle_.add(basis_signature)
 
 
 def is_linearly_independent(
@@ -131,13 +72,13 @@ def purge_aux_vars(
     return basis
 
 
-class Solver:
-    pivoting_strategy_: pivoting_strategy.PivotingStrategy
+class PrimalSimplex:
+    pivoting_strategy_: pivoting_strategy.PrimalPivotingStrategy
     solve_history_: SolveHistory
 
     def __init__(
         self,
-        pivot_strategy: pivoting_strategy.PivotingStrategy | None = None,
+        pivot_strategy: pivoting_strategy.PrimalPivotingStrategy | None = None,
     ) -> None:
         if pivot_strategy is not None:
             self.pivoting_strategy_ = pivot_strategy
@@ -175,7 +116,7 @@ class Solver:
             ),
         )
         # Use the smallest subscript rule to hopefully basis containing the original variables
-        phase_one_solver = Solver(pivot_strategy=pivoting_strategy.BlandsRule())
+        phase_one_solver = PrimalSimplex(pivot_strategy=self.pivoting_strategy_)
         phase_one_result = phase_one_solver.solve(
             phase_one_problem,
             initial_basis=np.array(
@@ -200,13 +141,9 @@ class Solver:
 
         aux_vars_still_in_basis = [b for b in basis if not b < problem.num_variables]
         if aux_vars_still_in_basis:
-            raise SolveFailedError("Auxhiliary variables still present in the basis.")
+            raise SolveFailedError("Auxiliary variables still present in the basis.")
 
         return basis
-
-        # TODO(you): Set up an auxiliary LP whose solution is a basic feasible solution to the original problem
-        # See page 378 in the book, for example.
-        # return np.zeros(problem.constraint_matrix.shape[0], dtype=int)
 
     def _compute_reduced_costs(
         self,
@@ -269,16 +206,14 @@ class Solver:
         logger.info("Iter     Objective      Primal Inf.    Dual Inf.    Time")
         start = time.time()
         for iteration in range(1, max_iterations):
-            non_basic_vars = np.array(
-                [i for i in range(problem.num_variables) if i not in set(basis)]
-            )
+            non_basic_vars = get_non_basic_vars(problem.num_variables, basis)
 
             # Step 1: Compute reduced costs
             # TODO(you): set to the correct reduced costs
             reduced_costs = self._compute_reduced_costs(
                 problem, basis, non_basic_vars, inv_basis_matrix
             )
-            if np.all(reduced_costs >= -pivoting_strategy.PIVOTING_TOLERANCE):
+            if np.all(reduced_costs >= -NON_NEGATIVITY_TOLERANCE):
                 logger.info(
                     f"Simplex algorithm found optimal objective {self.solve_history_.objective_history[-1]} after {iteration - 1} iterations."
                 )
@@ -292,7 +227,7 @@ class Solver:
             # d is the "basic direction" of the entering variable
             d = inv_basis_matrix @ problem.constraint_matrix[:, entering_variable]
 
-            if np.all(d <= 0):
+            if np.all(d <= pivoting_strategy.PIVOTING_TOLERANCE):
                 raise UnboundedLpError
 
             # Step 3: Determine the exiting variable
@@ -300,10 +235,10 @@ class Solver:
                 basis, x_basis, d
             )
 
-            # Step 4: Update the inverse of the basis matrix (feel free to change input args to update_inverse if desirable)
+            # Step 4: Update the inverse of the basis matrix
             basis[basic_exiting_index] = entering_variable
 
-            if (iteration % INVERSE_RECOMPUTE_INTERVAL == 0):
+            if iteration % INVERSE_RECOMPUTE_INTERVAL == 0:
                 inv_basis_matrix = np.linalg.inv(problem.constraint_matrix[:, basis])
             else:
                 inv_basis_matrix = linear_algebra.update_inverse(
@@ -311,10 +246,9 @@ class Solver:
                     inv_basis_matrix,
                     entering_variable,
                     basic_exiting_index,
-                )  # <-- TODO in here.
+                )
 
             # Step 5: Update the basic solution from the basic direction
-            # TODO(you): ...
             x_entering = float(x_basis[basic_exiting_index] / d[basic_exiting_index])
             x_basis -= x_entering * d
             x_basis[basic_exiting_index] = x_entering

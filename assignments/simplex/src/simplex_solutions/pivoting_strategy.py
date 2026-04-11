@@ -8,7 +8,7 @@ from common.numpy_type_aliases import ArrayF, ArrayI
 PIVOTING_TOLERANCE = 1e-6
 
 
-class PivotingStrategy(ABC):
+class PrimalPivotingStrategy(ABC):
     @abstractmethod
     def pick_entering_index(
         self,
@@ -55,6 +55,31 @@ class PivotingStrategy(ABC):
         ...
 
 
+class DualPivotingStrategy(ABC):
+    @abstractmethod
+    def pick_exiting_index(
+        self,
+        primal_vars: jaxtyping.Float[ArrayF, " m"],
+        basic_vars: jaxtyping.Int[ArrayI, " m"],
+    ) -> int:
+        """
+        TODO(martins): Describe purpose of picking entering index
+        """
+        ...
+
+    @abstractmethod
+    def pick_entering_index(
+        self,
+        non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
+        s: jaxtyping.Float[ArrayF, " num_nonbasic"],
+        pivot_direction: jaxtyping.Float[ArrayF, " num_nonbasic"],
+    ) -> int:
+        """
+        TODO(martins): Describe purpose of picking exiting index
+        """
+        ...
+
+
 def index_of_smallest_ratio(
     basis: jaxtyping.Int[ArrayI, " m"],
     x_basis: jaxtyping.Float[ArrayF, " m"],
@@ -80,7 +105,7 @@ def index_of_smallest_ratio(
     return smallest_ratio_with_smallest_var_index[2]
 
 
-class BlandsRule(PivotingStrategy):
+class BlandsRule(PrimalPivotingStrategy):
     @override
     def pick_entering_index(
         self,
@@ -99,7 +124,7 @@ class BlandsRule(PivotingStrategy):
         return index_of_smallest_ratio(basis, x_basis, basic_direction)
 
 
-class DantzigsRule(PivotingStrategy):
+class DantzigsRule(PrimalPivotingStrategy):
     @override
     def pick_entering_index(
         self,
@@ -117,3 +142,29 @@ class DantzigsRule(PivotingStrategy):
         basic_direction: jaxtyping.Float[ArrayF, " m"],
     ) -> int:
         return index_of_smallest_ratio(basis, x_basis, basic_direction)
+
+
+class DualBlandsRule(DualPivotingStrategy):
+    @override
+    def pick_exiting_index(
+        self,
+        primal_vars: jaxtyping.Float[ArrayF, " m"],
+        basic_vars: jaxtyping.Int[ArrayI, " m"],
+    ) -> int:
+        negative_basic_vars = [
+            (variable_index, basis_index, var)
+            for (basis_index, var), variable_index in zip(
+                enumerate(primal_vars), basic_vars, strict=True
+            )
+            if var < -PIVOTING_TOLERANCE
+        ]
+        return min(negative_basic_vars)[1]
+
+    @override
+    def pick_entering_index(
+        self,
+        non_basic_vars: jaxtyping.Int[ArrayI, " m"],
+        s: jaxtyping.Float[ArrayF, " m"],
+        pivot_direction: jaxtyping.Float[ArrayF, " m"],
+    ) -> int:
+        return index_of_smallest_ratio(non_basic_vars, s, pivot_direction)

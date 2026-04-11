@@ -7,7 +7,7 @@ from common.numpy_type_aliases import ArrayF, ArrayI
 PIVOTING_TOLERANCE = 1e-6
 
 
-class PivotingStrategy(ABC):
+class PrimalPivotingStrategy(ABC):
     @abstractmethod
     def pick_entering_index(
         self,
@@ -54,7 +54,32 @@ class PivotingStrategy(ABC):
         ...
 
 
-class BlandsRule(PivotingStrategy):
+class DualPivotingStrategy(ABC):
+    @abstractmethod
+    def pick_exiting_index(
+        self,
+        primal_vars: jaxtyping.Float[ArrayF, " m"],
+        basic_vars: jaxtyping.Int[ArrayI, " m"],
+    ) -> int:
+        """
+        Selects the variable that should exit the basis in the dual simplex method.
+        """
+        ...
+
+    @abstractmethod
+    def pick_entering_index(
+        self,
+        non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
+        s: jaxtyping.Float[ArrayF, " num_nonbasic"],
+        pivot_direction: jaxtyping.Float[ArrayF, " num_nonbasic"],
+    ) -> int:
+        """
+        Selects the variable that should enter the basis in the dual simplex method.
+        """
+        ...
+
+
+class BlandsRule(PrimalPivotingStrategy):
     @override
     def pick_entering_index(
         self,
@@ -75,7 +100,7 @@ class BlandsRule(PivotingStrategy):
         return -1
 
 
-class DantzigsRule(PivotingStrategy):
+class DantzigsRule(PrimalPivotingStrategy):
     @override
     def pick_entering_index(
         self,
@@ -93,4 +118,25 @@ class DantzigsRule(PivotingStrategy):
         basic_direction: jaxtyping.Float[ArrayF, " m"],
     ) -> int:
         # TODO(you): Pick exiting index according to Dantzig's rule.
+        return -1
+
+
+class DualBlandsRule(DualPivotingStrategy):
+    @override
+    def pick_exiting_index(
+        self,
+        primal_vars: jaxtyping.Float[ArrayF, " m"],
+        basic_vars: jaxtyping.Int[ArrayI, " m"],
+    ) -> int:
+        # TODO(you): Pick exiting index according to Bland's rule for the dual simplex.
+        return -1
+
+    @override
+    def pick_entering_index(
+        self,
+        non_basic_vars: jaxtyping.Int[ArrayI, " num_nonbasic"],
+        s: jaxtyping.Float[ArrayF, " num_nonbasic"],
+        pivot_direction: jaxtyping.Float[ArrayF, " num_nonbasic"],
+    ) -> int:
+        # TODO(you): Pick entering index according to Bland's rule for the dual simplex.
         return -1
