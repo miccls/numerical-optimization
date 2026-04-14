@@ -1,3 +1,4 @@
+\newpage
 \section{Linear Programming: The Simplex Method}
 
 Questions that came up during the book club session:
@@ -31,7 +32,7 @@ Questions that came up during the book club session:
           \begin{align*}
               f(x) - f(x^*) \geq \nabla f(x^*)^T(x - x^*) = \sum_{i\in\mathcal{A}(x^*)} \lambda_i \nabla c_i (x^*)^T (x - x^*)  \geq 0
           \end{align*}
-          Thus, $f(x) \geq f(x^*)$ for any $x \in \Omega$. \hfill$\blacksquare$
+          Thus, $f(x) \geq f(x^*)$ for any $x \in \Omega$. \hfill$\square$
     \item Can we formulate some more compelling, detailed version of the proof of part (ii) of the strong duality theorem?
           It turns out we can, and it is based on the basic logical relation, that $A \implies B \iff \lnot B \implies \lnot A$.
           An example in words could be ''\textit{A number divisible by four is even implies that no odd number is divisible by four}''.
@@ -65,9 +66,91 @@ Questions that came up during the book club session:
           $$
               \text{The dual is unbounded } \implies \text{ The primal is infeasible}
           $$
-          \hfill$\blacksquare$
+          \hfill$\square$
 
 \end{enumerate}
+
+\subsection{Phase I of the Dual Simplex Method}
+Just like the Primal Simplex Method (PSM) needs a basic primal feasible solution to start from, the Dual Simplex Method (DSM) needs a basic dual feasible one.
+The solving process is generally divided into two phases.
+During \textit{Phase I} one attempts to find a basic feasible starting solution to the problem at hand and during \textit{Phase II} the problem is solved starting from the solution found in Phase I.
+
+There are several ways to handle Phase I for both the Primal and Dual Simplex methods and one such solution is presented in the book for the PSM but none is introduced for the DSM.
+It is possible to derive a similar version of the Primal Phase I method described in \cite{NumericalOptimization}[section 13.5, p. 378-380] for the DSM which minimizes dual infeasibility.
+We outline those two Phase I algorithms now.
+
+\subsubsection{Auxiliary problems solved with PSM}
+The Phase I method for the primal solves the following problem:
+\begin{align*}
+    \operatorname{min} \> & \mathbf{1}^T s_\text{aux} \\
+    \text{s.t}            &                           \\
+                          & Ax + Es_\text{aux} = b    \\
+                          & x, s_\text{aux} \geq 0
+\end{align*}
+with $E_{ii} = \operatorname{sgn}(b_i)$ and zero elsewhere.
+This problem has a trivial starting basis which consists of the variables $s_\text{aux} = |b|$.
+If the optimal cost is 0 a basic feasible solution to the original problem has been found since that means the auxiliary variables are all zero.
+
+In a similar way one could set up the following problem
+\begin{align*}
+    \operatorname{min} \> & \mathbf{1}^T s_\text{aux}           \\
+    \text{s.t}            &                                     \\
+                          & A^T \lambda + s + Es_\text{aux} = c \\
+                          & s, s_\text{aux} \geq 0
+\end{align*}
+with $E_{ii} = \operatorname{sgn}(c_i)$ and zero elsewhere.
+This problem can be solved using the PSM and if the optimal cost is 0 that means that we have values of $\lambda, s$ such that $A^T\lambda + s = c$, i.e dual feasibility.
+
+\subsubsection{Artificial constraint method}
+One aspect about the method above that needs to be kept in mind is that if the basis is degenerate at the optimum (some of the basic variables are 0), there may still be auxiliary variables left in the basis.
+These must then be pivoted out of the basis before using it in Phase II.
+Alternatively, you can pass the augmented problem with the auxiliary variables left only with new upper bounds of 0 on all of the auxiliary variables to ensure feasibility is maintained.
+
+Another drawback, if you will, of the methods above in the context of the DSM is that you need the PSM in Phase I since the trivial basic solution we infer for these augmented problems in primal feasible, not dual.
+Therefore, I will include the details of a method which doesn't rely on solving another LP using the PSM.
+In fact, the dual phase I algorithm described below doesn't solve an LP at all which reflects very well on the amount of time spent in Phase I vs Phase II.
+Indeed, the LP solved in Phase I with the methods above is often as hard to solve as the one in Phase II so skipping that can have significant impact on running time.
+
+This method for finding a dual feasible solution is called the \textit{Single Artificial Constraint Method} or simply \textit{Artificial Constraint Method}.
+The name is a suitable one since the method augments the original problem by adding a single new constraint and variable on which it pivots to produce an optimal but primal infeasible solution from which to start the DSM.
+That is, \textit{the complexity is only that of a single pivot}.
+
+Dual feasibility is essentially equivalent to \textit{optimality}, that is all reduced costs are non negative.
+We want to introduce a new constraint with which it is easy to find and construct an optimal basis.
+Given the standard form generic linear program
+
+\begin{align*}
+    \operatorname{min} \> & c^T x    \\
+    \text{s.t}            &          \\
+                          & A x = b  \\
+                          & x \geq 0
+\end{align*}
+
+we pick an arbitraty basis, $B$, and add a new constraint and variable $x_\text{art}$ as follows
+\[
+    \sum_{i \notin B} x_i + x_\text{art} = M
+\]
+for some large value $M \in \mathbb{R}$.
+To produce an optimal basis, we add $x_\text{art}$ to the basis and compute the reduced costs of the non-basic variables, $\bar{c}_i = c_i - c_B B^{-1} A_i$, $i \in N$\footnote{The non-basic index set}.
+If all reduced costs are non negative (highly unlikely), we have a dual feasible solution and we are done.
+Otherwise we select the variable with the most negative reduced cost as the entering variable and $x_\text{art}$ as the exiting variable and perform a pivot.
+Since the artificial constraint is all ones this has the effect of subracting reduced cost of the entering variable from all others which, since we chose the one with the most negative cost, yields and optimal basis.
+
+Intuitively, one can see why this is an optimal basis (but most likely primal infeasible) by considering what happens in the pivot.
+Before the pivot, we have that all variables in the artificial constraint are 0 except for $x_\text{art}$:
+\[
+    \sum_{i \notin B} 0 + x_\text{art} = M
+\]
+after the pivot, we have
+\[
+    x_k = M
+\]
+where $k = \underset{j \notin B}{\operatorname{argmin}}(\bar{c}_j)$.
+All variables can be at most $M$ and we have allocated the entirety of that amount to the variable that gave the most decrease in the objective function.
+Any pivot that would reallocate some of the distance placed in $x_k$ would inevitably yield a worse objective value, thus meaning the basis $B \cup \{x_k\}$ is an optimal basis for the augmented problem.
+
+The general explanation of why the pivot in the artificial constraint method has the effect of subtracting the reduced cost of the entering variable from all other reduced costs is given in terms of the Simplex Tableau.
+I think an algebraic ``proof'' is more elegant even though the tableau-approach is arguably simpler.
 
 \subsection{Solutions}
 The exercises chosen for this chapter are 13.1, 13.2
