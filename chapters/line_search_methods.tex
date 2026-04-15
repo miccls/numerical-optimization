@@ -5,7 +5,7 @@ Therefore, I thought I would introduce them both here before moving on to solvin
 % TODO(martins): Cover the above concepts
 
 \subsection{Solutions}
-The selected exercises for this chapter are 3.2, 3.5, 3.7 and 3.8.
+The selected exercises for this chapter are 3.2, 3.3, 3.4
 
 \subsubsection{Exercise 3.2}
 The Wolfe conditions are the following two inequalities
@@ -93,6 +93,56 @@ Let's multiply both sides by $m/2$. In optimization, the ratio $\kappa = \frac{L
     c_1 - 1 \leq \frac{c_2 - 1}{2\kappa}
 \]
 
-\subsubsection{Exercise 3.5}
-\subsubsection{Exercise 3.7}
-\subsubsection{Exercise 3.8}
+\subsubsection{Exercise 3.3}
+
+Show the minimizer of a line search along direction $p$ for the function
+\[
+    f(x) = \frac{1}{2}x^T Q x - b^Tx,
+\]
+is
+\[
+    x^* = -\frac{\nabla f^T p}{p^T Q p}
+\]
+
+The objective value along the line $x + \alpha p$ is
+\[
+    \phi(\alpha) = f(x + \alpha p) = \frac{1}{2}(x + \alpha p)^T Q (x + \alpha) - b^T(x + \alpha p)
+\]
+Collecting terms by coupling to $\alpha$,
+\begin{align*}
+    \phi(\alpha) & = \frac{1}{2}x^T Q x - b^T x + \alpha(x^T Q p  - b^T p) + \frac{\alpha^2}{2} p^T Q p \\
+                 & = f(x) + \underbrace{\alpha(x^T Q  - b^T)}_{\nabla f(x)^T}p + \frac{\alpha^2}{2} p^T Q p
+\end{align*}
+Differentiating w.r.t $\alpha$:
+\[
+    \frac{d\phi}{d\alpha} = \nabla f(x)^T p + \alpha p^T Q p
+\]
+Solving for $\alpha$ by requiring $\frac{d\phi}{d\alpha} = 0$ we get the final answer
+\begin{equation}
+    \alpha = -\frac{\nabla f(x)^T p}{p^T Q p}.
+    \label{eq:one_dim_minimizer}
+\end{equation}
+\subsubsection{Exercise 3.4}
+The Goldstein conditions are the following linked inequalities
+\[
+  f(x_k) + (1 - c)\alpha_k\nabla f(x_k)^T p_k \leq f(x_k + \alpha_k p_k) \leq f(x_k) + c \alpha_k \nabla f(x_k)^T p_k
+\]
+If we start by considering the right side of the indequality,
+\[
+    f(x_k + \alpha_k p_k) \leq f(x_k) + c \alpha_k \nabla f(x_k)^T p_k
+\]
+and insert the result \eqref{eq:one_dim_minimizer} from the previous exercise, we get
+\[
+    f(x) - \left(\frac{\nabla f(x)^T p}{p^T Q p}\right)\nabla f(x)^T p + \frac{1}{2}\left(\frac{\nabla f(x)^T p}{p^T Q p}\right)^2 p^T Q p \leq  f(x) - c \left(\frac{\nabla f(x)^T p}{p^T Q p}\right) \nabla f(x)^T p
+\]
+Crossing out $f(x)$ and multiplying out the two factors on the LHS we get
+\[
+    -\frac{1}{2}\frac{(\nabla f(x)^T p)^2}{p^T Q p} \leq -c \frac{(\nabla f(x)^T p)^2}{p^T Q p}.
+\]
+Since $f(x)$ was strongly convex, $Q$ is positive definite and the fractions as non-negative values. 
+Thus we can divide them out and we are left with 
+\[
+    -\frac{1}{2} \leq -c \implies c \leq \frac{1}{2}
+\]
+which is satisfied by the definition of $c$.
+Performing an identical calculation yields a similar result for the other side of the inequality above.
