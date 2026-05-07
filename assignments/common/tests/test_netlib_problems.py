@@ -113,9 +113,8 @@ def test_netlib_scipy(
     """Test the Dual Simplex solver on a Netlib problem."""
     lp = get_problem(name, cached_lp_problems)
     optimum = NETLIB_SOLUTIONS[name]["optimum"]
-    iters = int(NETLIB_SOLUTIONS[name].get("simplex_iters", 1000))
 
     solution = linprog(lp.objective, A_eq=lp.constraint_matrix, b_eq=lp.rhs, options={'disp': True})
-    ß
+
     obtained_optimum = float(solution.fun)
     assert np.isclose(obtained_optimum, optimum)

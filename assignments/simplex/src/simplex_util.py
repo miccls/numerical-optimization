@@ -35,7 +35,7 @@ class IterationLimitError(SolveFailedError):
 MIN_CYCLE_LEN = 2
 OBJECTIVE_IMPROVEMENT_TOL = 1e-9
 OPTIMALITY_TOL = 1e-9
-NON_NEGATIVITY_TOLERANCE = 1e-4  # Should not be smaller than pivoting tolerance... 
+NON_NEGATIVITY_TOLERANCE = 1e-4  # Should not be smaller than pivoting tolerance...
 INVERSE_RECOMPUTE_INTERVAL = 100
 
 
