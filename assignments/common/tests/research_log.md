@@ -139,3 +139,93 @@ Here are the results:
 | | Dual Simplex | --- | *timeout* |
 
 This was clearly an improvement, so I think it is worth to try some fancier pivoting rules next!
+
+## 18-04-2026
+
+New hardware baseline for the solver implementations on the selected Netlib problems in `test_netlib_problems.py`.
+The simplex methods use the current Dantzig pivoting rules from the test file.
+*All tests were run with a **60s** hard timeout.*
+
+| Problem | Solver | Iterations | Time (s) |
+| :--- | :--- | :---: | :---: |
+| **afiro** | IPM | 9 | 0.00 |
+| | Primal Simplex | 0 | 0.00 |
+| | Dual Simplex | 12 | 0.00 |
+| **adlittle** | IPM | 12 | 0.01 |
+| | Primal Simplex | 60 | 0.02 |
+| | Dual Simplex | 77 | 0.01 |
+| **bandm** | IPM | 19 | 0.04 |
+| | Primal Simplex | --- | *LinAlgError: Singular matrix* |
+| | Dual Simplex | 386 | 0.16 |
+| **scsd1** | IPM | 8 | 0.01 |
+| | Primal Simplex | 246 | 0.07 |
+| | Dual Simplex | 209 | 0.06 |
+| **scsd6** | IPM | 10 | 0.02 |
+| | Primal Simplex | 458 | 0.20 |
+| | Dual Simplex | --- | *LinAlgError: Singular matrix* |
+| **scsd8** | IPM | 10 | 0.09 |
+| | Primal Simplex | 749 | 2.61 |
+| | Dual Simplex | --- | *LinAlgError: Singular matrix* |
+| **stocfor2** | IPM | 22 | 4.33 |
+| | Primal Simplex | --- | *timeout* |
+| | Dual Simplex | 1381 | 37.48 |
+
+### Rerun with Dual Bland's Rule
+
+After switching the dual simplex pivoting strategy back to `DualBlandsRule`, I reran the same benchmark.
+The dual simplex singular matrix errors are fixed for `bandm` and `scsd6`, but `scsd1` still raises a singular matrix error.
+*All tests were run with a **60s** hard timeout.*
+
+| Problem | Solver | Iterations | Time (s) |
+| :--- | :--- | :---: | :---: |
+| **afiro** | IPM | 9 | 0.00 |
+| | Primal Simplex | 0 | 0.00 |
+| | Dual Simplex | 7 | 0.00 |
+| **adlittle** | IPM | 12 | 0.01 |
+| | Primal Simplex | 60 | 0.02 |
+| | Dual Simplex | 188 | 0.03 |
+| **bandm** | IPM | 19 | 0.04 |
+| | Primal Simplex | --- | *LinAlgError: Singular matrix* |
+| | Dual Simplex | 3345 | 1.38 |
+| **scsd1** | IPM | 8 | 0.01 |
+| | Primal Simplex | 246 | 0.08 |
+| | Dual Simplex | --- | *LinAlgError: Singular matrix* |
+| **scsd6** | IPM | 10 | 0.02 |
+| | Primal Simplex | 458 | 0.19 |
+| | Dual Simplex | 5564 | 2.62 |
+| **scsd8** | IPM | 10 | 0.09 |
+| | Primal Simplex | 749 | 2.60 |
+| | Dual Simplex | --- | *timeout* |
+| **stocfor2** | IPM | 22 | 4.20 |
+| | Primal Simplex | --- | *timeout* |
+| | Dual Simplex | --- | *timeout* |
+
+### Rerun after Disabling Runtime Type Checking
+
+After disabling runtime type checking from `jaxtyping`, I reran the same benchmark.
+The iteration counts and failures are unchanged from the previous `DualBlandsRule` run, but the simplex timings improve modestly.
+*All tests were run with a **60s** hard timeout.*
+
+| Problem | Solver | Iterations | Time (s) |
+| :--- | :--- | :---: | :---: |
+| **afiro** | IPM | 9 | 0.01 |
+| | Primal Simplex | 0 | 0.00 |
+| | Dual Simplex | 7 | 0.00 |
+| **adlittle** | IPM | 12 | 0.01 |
+| | Primal Simplex | 60 | 0.02 |
+| | Dual Simplex | 188 | 0.02 |
+| **bandm** | IPM | 19 | 0.05 |
+| | Primal Simplex | --- | *LinAlgError: Singular matrix* |
+| | Dual Simplex | 3345 | 1.23 |
+| **scsd1** | IPM | 8 | 0.01 |
+| | Primal Simplex | 246 | 0.06 |
+| | Dual Simplex | --- | *LinAlgError: Singular matrix* |
+| **scsd6** | IPM | 10 | 0.02 |
+| | Primal Simplex | 458 | 0.16 |
+| | Dual Simplex | 5564 | 2.44 |
+| **scsd8** | IPM | 10 | 0.10 |
+| | Primal Simplex | 749 | 2.51 |
+| | Dual Simplex | --- | *timeout* |
+| **stocfor2** | IPM | 22 | 4.17 |
+| | Primal Simplex | --- | *timeout* |
+| | Dual Simplex | --- | *timeout* |

@@ -6,6 +6,7 @@ from common.netlib import load_netlib_problems
 from ipm_solutions import predictor_corrector
 from simplex_solutions import dual_simplex, primal_simplex
 from simplex_solutions import pivoting_strategy
+from scipy.optimize import linprog  # For benchmarking against
 
 # Database of known optimum values and recommended parameters
 # Note: MPS files do not contain the optimum objective value.
@@ -78,7 +79,7 @@ def test_netlib_primal_simplex(
     iters = int(NETLIB_SOLUTIONS[name].get("simplex_iters", 1000))
 
     primal_simplex_solver = primal_simplex.PrimalSimplex(
-        pivot_strategy=pivoting_strategy.DantzigsRule()
+        pivot_strategy=pivoting_strategy.SteepestEdgeRule()
     )
     solution = primal_simplex_solver.solve(lp, max_iterations=iters)
 
@@ -96,9 +97,25 @@ def test_netlib_dual_simplex(
     iters = int(NETLIB_SOLUTIONS[name].get("simplex_iters", 1000))
 
     dual_simplex_solver = dual_simplex.DualSimplex(
-        pivot_strategy=pivoting_strategy.DualBlandsRule()
+        pivot_strategy=pivoting_strategy.DualSteepestEdgeRule()
     )
     solution = dual_simplex_solver.solve(lp, max_iterations=iters)
 
     obtained_optimum = float(lp.objective.T @ solution.solution)
+    assert np.isclose(obtained_optimum, optimum)
+
+
+# For comparison with SciPy.ß
+@pytest.mark.parametrize("name", PROBLEMS_TO_TEST)
+def test_netlib_scipy(
+    name: str, cached_lp_problems: dict[str, lp_problem.LpProblem]
+) -> None:
+    """Test the Dual Simplex solver on a Netlib problem."""
+    lp = get_problem(name, cached_lp_problems)
+    optimum = NETLIB_SOLUTIONS[name]["optimum"]
+    iters = int(NETLIB_SOLUTIONS[name].get("simplex_iters", 1000))
+
+    solution = linprog(lp.objective, A_eq=lp.constraint_matrix, b_eq=lp.rhs, options={'disp': True})
+    ß
+    obtained_optimum = float(solution.fun)
     assert np.isclose(obtained_optimum, optimum)

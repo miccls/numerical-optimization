@@ -1,7 +1,6 @@
 import time
 from typing import TYPE_CHECKING
 
-import jaxtyping
 import numpy as np
 import pytest
 from common import lp_problem
@@ -20,44 +19,176 @@ if TYPE_CHECKING:
     from common.numpy_type_aliases import ArrayF
 
 
-class TestPivoting:
-    def test_jaxtyping(self) -> None:
-        """Test that we get a runtime error from jaxtyping due to calling the
-        function with arrays with dimensions that are not consistent with the annotations.
-        """
-
-        with pytest.raises(jaxtyping.TypeCheckError):
-            pivoting_strategy.BlandsRule().pick_entering_index(
-                np.array([1.0, 2.0, 3.0]), np.array([1, 2])
-            )
-
-    def test_smallest_subscript_entering(self) -> None:
+class TestPrimalPivoting:
+    @pytest.mark.parametrize(
+        "piv_strat, expected",
+        [
+            (pivoting_strategy.BlandsRule, 1),
+            (pivoting_strategy.DantzigsRule, 2),
+        ],
+    )
+    def test_entering_selection(
+        self,
+        piv_strat: type[pivoting_strategy.PrimalPivotingStrategy], expected: int
+    ) -> None:
         reduced_costs = np.array([0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0])
         non_basic_vars = np.array([0, 4, 5, 6, 3, 1, 2])
-        assert (
-            pivoting_strategy.BlandsRule().pick_entering_index(
-                reduced_costs, non_basic_vars
-            )
-            == 1
-        )
 
-    def test_smallest_subscript_exiting(self) -> None:
+        result = piv_strat().pick_entering_index(reduced_costs, non_basic_vars)
+        assert result == expected
+
+    @pytest.mark.parametrize(
+        "piv_strat",
+        [
+            pivoting_strategy.BlandsRule,
+            pivoting_strategy.DantzigsRule,
+        ],
+    )
+    def test_exiting_selection(
+        self, piv_strat: type[pivoting_strategy.PrimalPivotingStrategy]
+    ) -> None:
         x_basis = np.array(
             [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         )
         d = np.array(
             [1.0, -4.0, 1.0, 8.0, 1.0, 12.0],
         )
-        assert x_basis / d == pytest.approx(np.array([1.0, -0.5, 3.0, 0.5, 5.0, 0.5]))
 
         basic_vars = np.array([10, 2, 4, 20, 7, 6])
-        exiting_index = pivoting_strategy.BlandsRule().pick_exiting_index(
-            basic_vars, x_basis, d
-        )
+        exiting_index = piv_strat().pick_exiting_index(basic_vars, x_basis, d)
         exiting_variable = basic_vars[exiting_index]
 
         assert exiting_index == 5
         assert exiting_variable == 6
+
+
+class TestSteepestEdgeRule:
+    def test_entering_selection_uses_scaled_reduced_costs(self) -> None:
+        a = np.array([[1.0, 2.0, 1.0, 0.0], [0.0, 1.0, 0.0, 1.0]])
+        b = np.array([4.0, 2.0])
+        c = np.array([-4.0, -5.0, 0.0, 0.0])
+        problem = lp_problem.LpProblem(a, b, c)
+        basis = np.array([2, 3])
+
+        rule = pivoting_strategy.SteepestEdgeRule(problem, basis)
+
+        assert rule.pick_entering_index(
+            reduced_costs=np.array([-4.0, -5.0]),
+            non_basic_vars=np.array([0, 1]),
+        ) == 0
+
+    def test_eta_update_matches_recomputed_norms(self) -> None:
+        a = np.array([[1.0, 2.0, 1.0, 0.0], [0.0, 1.0, 0.0, 1.0]])
+        b = np.array([4.0, 2.0])
+        c = np.array([-4.0, -5.0, 0.0, 0.0])
+        problem = lp_problem.LpProblem(a, b, c)
+        basis = np.array([2, 3])
+        inv_basis_matrix = np.linalg.inv(problem.constraint_matrix[:, basis])
+        x_basis = inv_basis_matrix @ problem.rhs
+
+        rule = pivoting_strategy.SteepestEdgeRule(problem, basis)
+        entering_variable = rule.pick_entering_index(
+            reduced_costs=np.array([-4.0, -5.0]),
+            non_basic_vars=np.array([0, 1]),
+        )
+        basic_direction = inv_basis_matrix @ problem.constraint_matrix[
+            :, entering_variable
+        ]
+        exiting_index = rule.pick_exiting_index(
+            basis, x_basis, basic_direction, inv_basis_matrix
+        )
+
+        basis[exiting_index] = entering_variable
+        expected_non_basic_vars = np.array([1, 2])
+        expected_inv_basis_matrix = np.linalg.inv(problem.constraint_matrix[:, basis])
+        expected_basic_directions = (
+            expected_inv_basis_matrix
+            @ problem.constraint_matrix[:, expected_non_basic_vars]
+        )
+        expected_norms = 1.0 + np.sum(
+            expected_basic_directions * expected_basic_directions, axis=0
+        )
+
+        assert np.array_equal(rule.non_basic_vars, expected_non_basic_vars)
+        assert rule.norm_eta_squared == pytest.approx(expected_norms)
+
+    def test_solve_with_steepest_edge_and_initial_basis(
+        self, example_problem_35: lp_problem.LpProblem
+    ) -> None:
+        solve_result = primal_simplex.PrimalSimplex(
+            pivot_strategy=pivoting_strategy.SteepestEdgeRule()
+        ).solve(example_problem_35, initial_basis=np.array([3, 4, 5]))
+
+        assert sorted(solve_result.basis) == [0, 1, 2]
+        assert solve_result.solution == pytest.approx(np.array([4, 4, 4, 0, 0, 0]))
+        assert solve_result.objective_value == pytest.approx(-136)
+
+    def test_solve_with_steepest_edge_without_initial_basis(
+        self, example_problem_131: tuple[lp_problem.LpProblem, ArrayI]
+    ) -> None:
+        solve_result = primal_simplex.PrimalSimplex(
+            pivot_strategy=pivoting_strategy.SteepestEdgeRule()
+        ).solve(example_problem_131[0])
+
+        assert solve_result.objective_value == pytest.approx(-52 / 3)
+
+
+class TestDualPivoting:
+    @pytest.mark.parametrize(
+        "piv_strat, expected",
+        [
+            (pivoting_strategy.DualBlandsRule, 5),
+            (pivoting_strategy.DualDantzigsRule, 6),
+        ],
+    )
+    def test_exiting_selection(
+        self,
+        piv_strat: type[pivoting_strategy.DualPivotingStrategy], expected: int
+    ) -> None:
+        primal_vars = np.array([0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0])
+        basic_vars = np.array([0, 4, 5, 6, 3, 1, 2])
+
+        result = piv_strat().pick_exiting_index(primal_vars, basic_vars)
+        assert result == expected
+
+    def test_steepest_edge_exiting_selection_uses_scaled_primal_vars(self) -> None:
+        primal_vars = np.array([-3.0, -4.0])
+        basic_vars = np.array([10, 11])
+        inv_basis_matrix = np.array([[1.0, 0.0], [0.0, 10.0]])
+
+        result = pivoting_strategy.DualSteepestEdgeRule().pick_exiting_index(
+            primal_vars, basic_vars, inv_basis_matrix
+        )
+
+        assert result == 0
+
+    @pytest.mark.parametrize(
+        "piv_strat",
+        [
+            pivoting_strategy.DualBlandsRule,
+            pivoting_strategy.DualDantzigsRule,
+            pivoting_strategy.DualSteepestEdgeRule,
+        ],
+    )
+    def test_entering_selection(
+        self, piv_strat: type[pivoting_strategy.DualPivotingStrategy]
+    ) -> None:
+        s = np.array(
+            [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+        )
+        d = np.array(
+            [1.0, -4.0, 1.0, 8.0, 1.0, 12.0],
+        )
+
+        non_basic_vars = np.array([10, 2, 4, 20, 7, 6])
+        exiting_index = piv_strat().pick_entering_index(non_basic_vars, s, d)
+        exiting_variable = non_basic_vars[exiting_index]
+
+        assert exiting_index == 5
+        assert exiting_variable == 6
+
+
+
 
 
 class TestInverseComputation:
@@ -343,6 +474,17 @@ class TestDualBlandsRule:
 
 
 class TestDualSolve:
+    def test_problem_without_start_solution_with_steepest_edge(
+        self, example_problem_35: lp_problem.LpProblem
+    ) -> None:
+        solve_result = dual_simplex.DualSimplex(
+            pivot_strategy=pivoting_strategy.DualSteepestEdgeRule()
+        ).solve(example_problem_35)
+
+        assert sorted(solve_result.basis) == [0, 1, 2]
+        assert solve_result.solution == pytest.approx(np.array([4, 4, 4, 0, 0, 0]))
+        assert solve_result.objective_value == pytest.approx(-136)
+
     def test_problem_without_start_solution(
         self, example_problem_35: lp_problem.LpProblem
     ) -> None:

@@ -192,9 +192,9 @@ class PrimalSimplex:
                 ) from e
 
         inv_basis_matrix = np.linalg.inv(problem.constraint_matrix[:, basis])
+        self.pivoting_strategy_.initialize(problem, basis)
 
         # x_basis is the values of the basic variables
-        # TODO(you): set the correct values for x_basis here
         x_basis = inv_basis_matrix @ problem.rhs
 
         logger.info("Starting simplex algorithm...")
@@ -209,7 +209,6 @@ class PrimalSimplex:
             non_basic_vars = get_non_basic_vars(problem.num_variables, basis)
 
             # Step 1: Compute reduced costs
-            # TODO(you): set to the correct reduced costs
             reduced_costs = self._compute_reduced_costs(
                 problem, basis, non_basic_vars, inv_basis_matrix
             )
@@ -232,7 +231,7 @@ class PrimalSimplex:
 
             # Step 3: Determine the exiting variable
             basic_exiting_index = self.pivoting_strategy_.pick_exiting_index(
-                basis, x_basis, d
+                basis, x_basis, d, inv_basis_matrix
             )
 
             # Step 4: Update the inverse of the basis matrix

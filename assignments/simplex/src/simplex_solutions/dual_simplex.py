@@ -48,7 +48,10 @@ class DualSimplex:
 
     def _setup_artificial_problem(
         self, problem: lp_problem.LpProblem, big_m: float = 1e6
-    ) -> tuple[lp_problem.LpProblem, jaxtyping.Int[ArrayI, " m+1"]]:
+    ) -> tuple[
+        lp_problem.LpProblem,
+        jaxtyping.Int[ArrayI, " m"],
+    ]:
         """
         Sets up the problem for a Phase 1 Dual Simplex by adding a single artificial constraint.
 
@@ -159,6 +162,7 @@ class DualSimplex:
 
         basis = initial_basis
         inv_basis_matrix = np.linalg.inv(problem.constraint_matrix[:, basis])
+        self.pivoting_strategy_.initialize(problem, basis)
 
         x_basis = inv_basis_matrix @ problem.rhs
 
@@ -183,7 +187,9 @@ class DualSimplex:
                     problem, basis, x_basis, is_augmented, original_num_variables
                 )
 
-            exiting_index = self.pivoting_strategy_.pick_exiting_index(x_basis, basis)
+            exiting_index = self.pivoting_strategy_.pick_exiting_index(
+                x_basis, basis, inv_basis_matrix
+            )
 
             # Compute dual variables
             lam = inv_basis_matrix.T @ problem.objective[basis]
@@ -206,12 +212,14 @@ class DualSimplex:
             )
             entering_variable = non_basic_vars[entering_index]
 
+
             basic_direction = (
                 inv_basis_matrix @ problem.constraint_matrix[:, entering_variable]
             )
             gamma = x_basis[exiting_index] / basic_direction[exiting_index]
             x_basis -= gamma * basic_direction
             x_basis[exiting_index] = gamma
+
 
             # Update basis
             basis[exiting_index] = entering_variable
@@ -230,7 +238,7 @@ class DualSimplex:
             self.solve_history_.update(basis, float(problem.objective[basis] @ x_basis))
             logger.info(
                 f"{iteration:4d}    {problem.objective[basis].T @ x_basis:10.3e}     "
-                f"{np.sum(np.abs(problem.constraint_matrix[:, basis] @ x_basis - problem.rhs)) - np.sum(np.minimum(x_basis, 0.0)):10.3e}     {max(0.0, np.sum(problem.constraint_matrix.T @ (inv_basis_matrix @ problem.objective[basis]) - problem.objective)):10.3e}"
+                f"{np.sum(np.abs(problem.constraint_matrix[:, basis] @ x_basis - problem.rhs)) - np.sum(np.minimum(x_basis, 0.0)):10.3e}     {abs(min(np.min(s_non_basic), 0.0)):10.3e}"
                 f"    {time.time() - start:.4}s"
             )
 
