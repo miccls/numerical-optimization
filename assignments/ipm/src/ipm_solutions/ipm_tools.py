@@ -4,6 +4,7 @@ import jaxtyping
 import numpy as np
 from common import lp_problem
 from common.numpy_type_aliases import ArrayF
+from scipy import sparse
 
 
 @dataclass(frozen=True)
@@ -53,7 +54,7 @@ def calculate_mu_after_step(
 
 
 def solve_ipm_system(
-    a: jaxtyping.Float[ArrayF, "m n"],
+    a: sparse.csr_array,
     point: PrimalDualTuple,
     r_c: jaxtyping.Float[ArrayF, " n"],
     r_b: jaxtyping.Float[ArrayF, " m"],
@@ -73,8 +74,10 @@ def solve_ipm_system(
 
     d2 = point.x / point.s
     ad2a = (a * d2) @ a.T
-    # About 2x faster than np.linalg.inv.
-    dlam = np.linalg.solve(ad2a, -r_b - (a * d2) @ r_c + a @ (r_xs / point.s))
+    # Much faster than using dense
+    dlam = sparse.linalg.spsolve(
+        ad2a.tocsc(), -r_b - (a * d2) @ r_c + a @ (r_xs / point.s)
+    )
     ds = -r_c - a.T @ dlam
     dx = -(r_xs / point.s) - (d2 * ds)
     return PrimalDualTuple(x=dx, lam=dlam, s=ds)
@@ -101,7 +104,7 @@ def solve_newton_direction(
 ) -> PrimalDualTuple:
     """Solves the system (14.35) in Nocedal & Wright for the Newton direction"""
 
-    a = lp_problem.constraint_matrix
+    a = lp_problem.sparse_constraint_matrix
     b = lp_problem.rhs
     c = lp_problem.objective
 
@@ -135,7 +138,7 @@ def solve_predictor_corrector_direction(
 ) -> PrimalDualTuple:
     """Solves the system (14.35) in Nocedal & Wright for the predictor corrector direction"""
 
-    a = lp_problem.constraint_matrix
+    a = lp_problem.sparse_constraint_matrix
     b = lp_problem.rhs
     c = lp_problem.objective
 

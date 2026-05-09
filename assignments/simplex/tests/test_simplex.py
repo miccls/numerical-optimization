@@ -28,8 +28,7 @@ class TestPrimalPivoting:
         ],
     )
     def test_entering_selection(
-        self,
-        piv_strat: type[pivoting_strategy.PrimalPivotingStrategy], expected: int
+        self, piv_strat: type[pivoting_strategy.PrimalPivotingStrategy], expected: int
     ) -> None:
         reduced_costs = np.array([0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0])
         non_basic_vars = np.array([0, 4, 5, 6, 3, 1, 2])
@@ -72,10 +71,13 @@ class TestSteepestEdgeRule:
 
         rule = pivoting_strategy.SteepestEdgeRule(problem, basis)
 
-        assert rule.pick_entering_index(
-            reduced_costs=np.array([-4.0, -5.0]),
-            non_basic_vars=np.array([0, 1]),
-        ) == 0
+        assert (
+            rule.pick_entering_index(
+                reduced_costs=np.array([-4.0, -5.0]),
+                non_basic_vars=np.array([0, 1]),
+            )
+            == 0
+        )
 
     def test_eta_update_matches_recomputed_norms(self) -> None:
         a = np.array([[1.0, 2.0, 1.0, 0.0], [0.0, 1.0, 0.0, 1.0]])
@@ -91,9 +93,9 @@ class TestSteepestEdgeRule:
             reduced_costs=np.array([-4.0, -5.0]),
             non_basic_vars=np.array([0, 1]),
         )
-        basic_direction = inv_basis_matrix @ problem.constraint_matrix[
-            :, entering_variable
-        ]
+        basic_direction = (
+            inv_basis_matrix @ problem.constraint_matrix[:, entering_variable]
+        )
         exiting_index = rule.pick_exiting_index(
             basis, x_basis, basic_direction, inv_basis_matrix
         )
@@ -142,8 +144,7 @@ class TestDualPivoting:
         ],
     )
     def test_exiting_selection(
-        self,
-        piv_strat: type[pivoting_strategy.DualPivotingStrategy], expected: int
+        self, piv_strat: type[pivoting_strategy.DualPivotingStrategy], expected: int
     ) -> None:
         primal_vars = np.array([0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0])
         basic_vars = np.array([0, 4, 5, 6, 3, 1, 2])
@@ -186,9 +187,6 @@ class TestDualPivoting:
 
         assert exiting_index == 5
         assert exiting_variable == 6
-
-
-
 
 
 class TestInverseComputation:

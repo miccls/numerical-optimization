@@ -229,3 +229,20 @@ The iteration counts and failures are unchanged from the previous `DualBlandsRul
 | **stocfor2** | IPM | 22 | 4.17 |
 | | Primal Simplex | --- | *timeout* |
 | | Dual Simplex | --- | *timeout* |
+
+## 09-05-2026
+
+After switching the IPM linear algebra to sparse matrices, I reran the Netlib benchmark for IPM only using `benchmark_netlib.py`.
+The simplex implementations were not rerun in this pass.
+
+| Problem | Solver | Iterations | Time (s) |
+| :--- | :--- | :---: | :---: |
+| **afiro** | IPM | 8 | 0.03 |
+| **adlittle** | IPM | 11 | 0.02 |
+| **bandm** | IPM | 17 | 0.05 |
+| **scsd1** | IPM | 7 | 0.02 |
+| **scsd6** | IPM | 10 | 0.02 |
+| **scsd8** | IPM | 9 | 0.04 |
+| **stocfor2** | IPM | 21 | 0.29 |
+
+With the benchmark tolerance set to `5e-9`, `stocfor2` now solves successfully before the sparse normal-equation system becomes singular.

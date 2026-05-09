@@ -212,14 +212,12 @@ class DualSimplex:
             )
             entering_variable = non_basic_vars[entering_index]
 
-
             basic_direction = (
                 inv_basis_matrix @ problem.constraint_matrix[:, entering_variable]
             )
             gamma = x_basis[exiting_index] / basic_direction[exiting_index]
             x_basis -= gamma * basic_direction
             x_basis[exiting_index] = gamma
-
 
             # Update basis
             basis[exiting_index] = entering_variable

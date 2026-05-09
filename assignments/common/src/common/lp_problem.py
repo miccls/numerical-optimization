@@ -1,4 +1,7 @@
 from dataclasses import dataclass
+from functools import cached_property
+
+from scipy import sparse
 
 import jaxtyping
 
@@ -14,3 +17,7 @@ class LpProblem:
     @property
     def num_variables(self) -> int:
         return len(self.objective)
+
+    @cached_property
+    def sparse_constraint_matrix(self) -> sparse.csr_array:
+        return sparse.csr_array(self.constraint_matrix)
