@@ -2,3 +2,5 @@ latex-build/
 *.egg-info
 *.txt
 *__pycache__*
+indent.log
+latexindent.exe
